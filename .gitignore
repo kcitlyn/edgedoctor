@@ -1,16 +1,44 @@
-# OS
+# ── OS ─────────────────────────────────────────────
 .DS_Store
 
-# Logs
+# ── Python ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# ── Logs / scratch ─────────────────────────────────
 *.log
 
-# Environment
+# ── Environment ────────────────────────────────────
 .env
 .env.local
 
-# Dependencies
-node_modules/
-
-# Build output
+# ── Build output ───────────────────────────────────
 dist/
 build/
+
+# ── Model & conversion artifacts (large / regenerable) ──
+# These are produced by the pipeline (train → export → convert) and
+# should never be committed: they're big, machine-specific, and rebuildable.
+*.onnx
+*.engine
+*.plan
+*.trt
+*.mlpackage
+*.mlmodel
+*.tflite
+*.pte
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+weights/
+checkpoints/
+artifacts/

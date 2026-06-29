@@ -1,0 +1,46 @@
+# Build/packaging config for the `edgedoctor` package.
+#
+# We use the modern PEP 621 layout: project metadata lives here under
+# [project], and we use a `src/` layout (code in src/edgedoctor/) so that the
+# installed package — not the working directory — is what gets imported during
+# tests. That avoids a classic footgun where `import edgedoctor` silently picks
+# up the source folder instead of the installed package.
+#
+# Dependencies are intentionally MINIMAL right now. We only need a CLI to run.
+# Heavy deps (torch, onnx, tensorrt, an LLM client) get added per-phase, behind
+# optional extras, so a fresh `pip install -e .` stays fast and the core library
+# stays importable without a GPU stack.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "edgedoctor"
+version = "0.1.0"
+description = "The universal, cross-vendor edge-AI deployment diagnostician."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Kaitlyn Chen" }]
+keywords = ["edge-ai", "tensorrt", "onnx", "coreml", "model-deployment", "diagnostics"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+# No runtime deps yet — the CLI uses only the standard library (argparse).
+dependencies = []
+
+[project.optional-dependencies]
+# Installed per-phase as the slices come online, e.g. `pip install -e ".[dev]"`.
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+# Makes `edgedoctor ...` available on the PATH after install. It points at the
+# main() function in the cli module.
+edgedoctor = "edgedoctor.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/edgedoctor"]
