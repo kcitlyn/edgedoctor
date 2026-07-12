@@ -30,12 +30,25 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
-# No runtime deps yet — the CLI uses only the standard library (argparse).
-dependencies = []
+# Kept deliberately small (3 deps). typer vendors click and brings rich for
+# terminal formatting; pydantic v2 gives us validated data contracts + JSON
+# Schema for free (the same schema later feeds the LLM's structured output);
+# pyyaml reads the rule knowledge base.
+dependencies = [
+    "typer>=0.26",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+]
 
 [project.optional-dependencies]
-# Installed per-phase as the slices come online, e.g. `pip install -e ".[dev]"`.
-dev = ["pytest", "ruff"]
+# The LLM layer is an extra so the core tool installs light and works with no
+# API key (rules-only mode). `pip install "edgedoctor[llm]"` to enable synthesis.
+llm = ["anthropic>=0.40"]
+
+[dependency-groups]
+# Dev tooling (uv installs these by default with `uv sync`).
+# syrupy = golden-file snapshot tests for parsers against the log corpus.
+dev = ["pytest>=8", "ruff>=0.6", "syrupy>=4"]
 
 [project.scripts]
 # Makes `edgedoctor ...` available on the PATH after install. It points at the

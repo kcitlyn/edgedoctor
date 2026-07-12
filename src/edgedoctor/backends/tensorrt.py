@@ -3,11 +3,13 @@
 This is the first backend edgedoctor will fully implement (Phases 1–2). For now
 it's an honest stub: it implements the `Backend` interface so the seam is real
 and import-able, but every method raises `NotImplementedError` rather than
-pretending to work. Honesty over fake results — see the project guardrails.
+pretending to work.
 
-When built out, `convert()` will drive PyTorch→ONNX→TensorRT (via trtexec /
-Polygraphy) and `parse()` will turn the captured logs into `Facts` for failure
-classes (A) op-support/CPU-fallback and (B) accuracy divergence.
+When built out:
+  - `convert()` will drive PyTorch→ONNX→TensorRT (via trtexec/Polygraphy)
+  - `parse()` will turn captured trtexec/Polygraphy logs into `Facts` for:
+      (A) op-support failures / build failures
+      (B) accuracy divergence (FP32 vs INT8, layer-level SQNR)
 """
 
 from __future__ import annotations
