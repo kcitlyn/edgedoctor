@@ -1,0 +1,117 @@
+# TensorRT diagnosis rules — the curated knowledge base.
+#
+# Each rule maps a PATTERN OF FACTS (what the parser observed) to a DIAGNOSIS
+# (cause + fix). This is the deterministic diagnosis path: no LLM, no network,
+# no API key. The LLM layer (later) only handles fact patterns no rule matches,
+# and must cite these same structures.
+#
+# Rule anatomy:
+#   id:        stable code (never reused, ruff/ESLint-style). ED01xx = TensorRT
+#              conversion/build, ED02xx = accuracy (reserved), ED03xx = ORT
+#              (reserved), ED09xx = environment/versions.
+#   severity:  error | warning | info
+#   requires:  fact kinds that must ALL be present for this rule to fire.
+#   message:   one-line headline. May reference {placeholders} filled from the
+#              matched facts' data fields.
+#   cause:     why this happens (2-3 sentences, plain English).
+#   suggestions: concrete fixes. applicability: machine-applicable means an
+#              agent may run it unattended; maybe-incorrect needs human review.
+#   refs:      documentation the cause/fix is drawn from — every rule is
+#              traceable to a source, same discipline as the parser.
+
+- id: ED0101
+  severity: error
+  requires: [unsupported_op]
+  message: "op '{op}' is not supported by this TensorRT ONNX parser"
+  cause: >
+    The TensorRT ONNX parser has no importer for this operator, and no plugin
+    with that name was found in the plugin registry. TensorRT cannot run
+    unsupported ops on CPU — the build fails outright. This usually means the
+    op needs a newer TensorRT/opset combination, or the model must be
+    re-exported to avoid the op.
+  suggestions:
+    - summary: "Re-export with a newer ONNX opset — many ops gained TensorRT support at higher opsets"
+      command: "torch.onnx.export(..., opset_version=17)"
+      applicability: maybe-incorrect
+    - summary: "Check the supported-ops matrix for your TensorRT version"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "If the op is genuinely unsupported, replace it in the model or implement a TensorRT plugin"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/onnx/onnx-tensorrt/blob/main/docs/operators.md"
+
+- id: ED0102
+  severity: error
+  requires: [no_implementation]
+  message: "TensorRT found no kernel implementation for node '{node}'"
+  cause: >
+    The op was parsed successfully, but at build time the autotuner could not
+    find any kernel ("tactic") that can execute this layer with the requested
+    precision/format/shape on this GPU. Common triggers: an unusual data
+    layout, FP16/INT8 precision the layer doesn't support, insufficient
+    workspace memory, or a shape outside what the kernels handle.
+  suggestions:
+    - summary: "Retry without reduced precision to isolate whether FP16/INT8 is the trigger"
+      command: "trtexec --onnx=<model> (drop --fp16/--int8)"
+      applicability: maybe-incorrect
+    - summary: "Increase workspace memory"
+      command: "trtexec --memPoolSize=workspace:2048M ..."
+      applicability: maybe-incorrect
+  refs:
+    - "https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/troubleshooting.html"
+
+- id: ED0103
+  severity: error
+  requires: [parse_error_node]
+  message: "ONNX parse failed at node {idx}"
+  cause: >
+    The TensorRT ONNX parser rejected this node. The error code and node
+    identity in the evidence identify which construct the parser could not
+    handle — most often an unsupported op variant, an attribute outside the
+    supported range, or a data type TensorRT doesn't accept for this op.
+  suggestions:
+    - summary: "Inspect the failing node in the ONNX graph"
+      command: "polygraphy inspect model <model>.onnx --show layers"
+      applicability: machine-applicable
+    - summary: "Try a different opset export; parser support varies by opset"
+      command: "torch.onnx.export(..., opset_version=17)"
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/onnx/onnx-tensorrt"
+
+- id: ED0104
+  severity: warning
+  requires: [tactic_skipped]
+  message: "autotuner skipped tactic(s) during build"
+  cause: >
+    While benchmarking candidate kernels, TensorRT skipped at least one tactic
+    (commonly due to insufficient GPU memory or an internal assertion). If the
+    build still succeeded, this is only a possible performance loss. If the
+    build failed, the skips explain why no implementation was found.
+  suggestions:
+    - summary: "If build failed or is slow: free GPU memory / increase workspace"
+      command: "trtexec --memPoolSize=workspace:2048M ..."
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/issues/4736"
+
+- id: ED0105
+  severity: error
+  requires: [plugin_not_found]
+  message: "plugin '{plugin}' not found in the TensorRT plugin registry"
+  cause: >
+    The model references a custom op that TensorRT expected to satisfy with a
+    plugin, but no plugin of that name/version is registered. Either the
+    plugin library isn't loaded (common with TensorRT-OSS plugins), or the op
+    was never meant to be a plugin and the model needs re-export.
+  suggestions:
+    - summary: "If this is a known TensorRT-OSS plugin, ensure libnvinfer_plugin is initialized"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Otherwise treat as an unsupported op (see ED0101 fixes)"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/tree/main/plugin"

@@ -66,21 +66,45 @@ class TestParse:
         assert "no parser" in result.output
 
 
-class TestDiagnoseStub:
+class TestDiagnose:
+    FIXTURE = "tests/fixtures/tensorrt/unsupported_op_trt8.log"
+    SUCCESS = "tests/fixtures/tensorrt/success.log"
+
+    def test_error_log_exits_2(self):
+        result = runner.invoke(app, ["diagnose", self.FIXTURE])
+        assert result.exit_code == 2
+
+    def test_success_log_exits_0(self):
+        result = runner.invoke(app, ["diagnose", self.SUCCESS])
+        assert result.exit_code == 0
+
+    def test_shows_rule_code_and_message(self):
+        result = runner.invoke(app, ["diagnose", self.FIXTURE])
+        assert "ED0101" in result.output
+        assert "GridSample" in result.output
+
+    def test_shows_evidence(self):
+        result = runner.invoke(app, ["diagnose", self.FIXTURE])
+        assert "No importer registered" in result.output
+
+    def test_json_output_is_valid(self):
+        import json
+        result = runner.invoke(app, ["diagnose", self.FIXTURE, "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        assert data["schemaVersion"] == 1
+        assert len(data["diagnostics"]) >= 1
+        assert data["diagnostics"][0]["code"] == "ED0101"
+
+    def test_missing_file_exits_1(self):
+        result = runner.invoke(app, ["diagnose", "nope.log"])
+        assert result.exit_code == 1
+
     def test_unimplemented_backend_exits_1(self):
-        # Honest-stub contract: exit 1 (tool cannot do the job yet), with a
-        # message that says so — never a fake diagnosis.
-        result = runner.invoke(app, ["diagnose", "model.onnx", "-b", "tensorrt"])
+        result = runner.invoke(app, ["diagnose", self.FIXTURE, "-b", "coreml"])
         assert result.exit_code == 1
         assert "Not implemented yet" in result.output
 
     def test_unknown_backend_rejected(self):
-        # The BackendName enum gives us choice validation for free.
-        result = runner.invoke(app, ["diagnose", "model.onnx", "-b", "notreal"])
+        result = runner.invoke(app, ["diagnose", self.FIXTURE, "-b", "notreal"])
         assert result.exit_code != 0
-
-    def test_all_declared_backends_are_stubbed_honestly(self):
-        for backend in ["tensorrt", "onnxruntime", "coreml", "tflite", "executorch"]:
-            result = runner.invoke(app, ["diagnose", "model.onnx", "-b", backend])
-            assert result.exit_code == 1, f"{backend} should be an honest stub"
-            assert "Not implemented yet" in result.output

@@ -50,7 +50,8 @@ class BackendName(str, Enum):
     executorch = "executorch"
 
 
-IMPLEMENTED_BACKENDS: set[BackendName] = set()  # none fully built yet — honest
+# Backends whose full diagnose pipeline (parse → rules → report) works.
+IMPLEMENTED_BACKENDS: set[BackendName] = {BackendName.tensorrt}
 
 
 def _version_callback(value: bool) -> None:
@@ -71,7 +72,9 @@ def _app_callback(
 
 @app.command()
 def diagnose(
-    model: Path = typer.Argument(..., help="Path to the model (e.g. model.onnx)."),
+    artifact: Path = typer.Argument(
+        ..., help="Build log or artifact to diagnose (e.g. build.log)."
+    ),
     backend: BackendName = typer.Option(
         BackendName.tensorrt, "--backend", "-b", help="Target edge backend."
     ),
@@ -79,18 +82,53 @@ def diagnose(
         False, "--json", help="Emit machine-readable JSON on stdout."
     ),
 ) -> None:
-    """Diagnose why a model fails or underperforms on an edge backend."""
-    err.print(f"[dim]edgedoctor v{__version__} · model={model} · backend={backend.value}[/dim]")
+    """Diagnose why a model fails or underperforms on an edge backend.
+
+    Parses the artifact, matches facts against the rule knowledge base, and
+    renders a grounded report with evidence, root cause, and fix suggestions.
+    Works fully offline — no LLM, no API key.
+    """
+    err.print(f"[dim]edgedoctor v{__version__} · artifact={artifact} · "
+              f"backend={backend.value}[/dim]")
 
     if backend not in IMPLEMENTED_BACKENDS:
-        # Honest stub: report status instead of faking a diagnosis.
         err.print()
         err.print("[yellow]⚠  Not implemented yet.[/yellow]")
         err.print(
-            f"   The '{backend.value}' diagnosis pipeline is still being built (Phases 1–2)."
+            f"   The '{backend.value}' diagnosis pipeline is still being built."
         )
         err.print("   See ROADMAP.md for what's now / next / later.")
         raise typer.Exit(code=1)
+
+    if not artifact.exists():
+        err.print(f"[red]error:[/red] file not found: {artifact}")
+        raise typer.Exit(code=1)
+
+    # 1. Parse
+    from .backends.tensorrt import TensorRTBackend
+    facts = TensorRTBackend().parse(artifact)
+
+    # 2. Diagnose (rule-based, deterministic)
+    from .diagnoser import diagnose as run_diagnosis
+    diagnoses = run_diagnosis(facts)
+
+    # 3. Render
+    from .report import render_human, render_json
+
+    if json_output:
+        print(render_json(diagnoses, facts))
+        raise typer.Exit(code=0)
+
+    render_human(diagnoses, facts, console=out)
+
+    # Exit code per contract: 2 = errors found, 3 = warnings only, 0 = clean.
+    has_errors = any(d.severity == "error" for d in diagnoses)
+    has_warnings = any(d.severity == "warning" for d in diagnoses)
+    if has_errors:
+        raise typer.Exit(code=2)
+    elif has_warnings:
+        raise typer.Exit(code=3)
+    raise typer.Exit(code=0)
 
 
 @app.command()
