@@ -1,0 +1,22 @@
+[07/12/2026-14:03:11] [I] === Model Options ===
+[07/12/2026-14:03:11] [I] Format: ONNX
+[07/12/2026-14:03:11] [I] Model: model.onnx
+[07/12/2026-14:03:11] [I] TensorRT version: 8.6.1
+[07/12/2026-14:03:12] [I] Start parsing network model.
+[07/12/2026-14:03:12] [I] [TRT] ----------------------------------------------------------------
+[07/12/2026-14:03:12] [I] [TRT] Input filename:   model.onnx
+[07/12/2026-14:03:12] [I] [TRT] ONNX IR version:  0.0.8
+[07/12/2026-14:03:12] [I] [TRT] Opset version:    13
+[07/12/2026-14:03:12] [I] [TRT] ----------------------------------------------------------------
+[07/12/2026-14:03:12] [W] [TRT] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+[07/12/2026-14:03:12] [I] [TRT] No importer registered for op: GridSample. Attempting to import as plugin.
+[07/12/2026-14:03:12] [I] [TRT] Searching for plugin: GridSample, plugin_version: 1, plugin_namespace:
+[07/12/2026-14:03:12] [E] [TRT] getPluginCreator could not find plugin: GridSample version: 1
+[07/12/2026-14:03:12] [E] [TRT] ModelImporter.cpp:773: While parsing node number 42 [GridSample -> "/decoder/grid_sample_output_0"]:
+[07/12/2026-14:03:12] [E] [TRT] ModelImporter.cpp:774: --- Begin node ---
+[07/12/2026-14:03:12] [E] [TRT] ModelImporter.cpp:775: input: "/decoder/Reshape_output_0"
+[07/12/2026-14:03:12] [E] Failed to parse onnx file
+[07/12/2026-14:03:12] [E] Parsing model failed
+[07/12/2026-14:03:12] [E] Failed to create engine from model or file.
+[07/12/2026-14:03:12] [E] Engine set up failed
+&&&& FAILED TensorRT.trtexec [TensorRT v8601] # trtexec --onnx=model.onnx --saveEngine=model.engine

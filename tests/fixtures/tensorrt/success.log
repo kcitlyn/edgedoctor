@@ -1,0 +1,12 @@
+[07/12/2026-17:05:44] [I] === Model Options ===
+[07/12/2026-17:05:44] [I] Format: ONNX
+[07/12/2026-17:05:44] [I] Model: mobilenetv3_small.onnx
+[07/12/2026-17:05:44] [I] TensorRT version: 10.7.0
+[07/12/2026-17:05:45] [I] Start parsing network model.
+[07/12/2026-17:05:45] [I] Finished parsing network model. Parse time: 0.21
+[07/12/2026-17:06:12] [I] Engine built in 27.3 sec.
+[07/12/2026-17:06:12] [I] Created engine with size: 5.42 MiB
+[07/12/2026-17:06:13] [I] Saved engine to mobilenet.engine
+[07/12/2026-17:06:14] [I] GPU Compute Time: min = 0.82 ms, max = 1.14 ms, mean = 0.89 ms
+[07/12/2026-17:06:14] [I] Throughput: 1123.5 qps
+&&&& PASSED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=mobilenetv3_small.onnx --saveEngine=mobilenet.engine --fp16

@@ -93,6 +93,60 @@ def diagnose(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def parse(
+    artifact: Path = typer.Argument(
+        ..., help="Raw artifact to parse (e.g. a trtexec build log)."
+    ),
+    backend: BackendName = typer.Option(
+        BackendName.tensorrt, "--backend", "-b", help="Backend that produced the artifact."
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit the Facts as JSON on stdout."
+    ),
+) -> None:
+    """Extract structured Facts from a raw vendor artifact (no LLM, no network).
+
+    This is the deterministic first stage of diagnosis, exposed directly so
+    you can inspect exactly what the parser saw — every fact cites file:line.
+    """
+    if not artifact.exists():
+        err.print(f"[red]error:[/red] file not found: {artifact}")
+        raise typer.Exit(code=1)
+
+    if backend is not BackendName.tensorrt:
+        err.print(f"[red]error:[/red] no parser for '{backend.value}' yet — see ROADMAP.md")
+        raise typer.Exit(code=1)
+
+    from .backends.tensorrt import TensorRTBackend
+
+    facts = TensorRTBackend().parse(artifact)
+
+    if json_output:
+        # Machine consumers get the exact pydantic contract on stdout.
+        print(facts.model_dump_json(indent=2))
+        return
+
+    if not facts.facts:
+        out.print(f"No known signatures matched in [bold]{artifact.name}[/bold].")
+        out.print("[dim]This may be a clean log, or a failure mode edgedoctor "
+                  "doesn't know yet — if the run DID fail, please open an issue "
+                  "with the log attached.[/dim]")
+        return
+
+    from rich.table import Table
+
+    table = Table(title=f"Facts extracted from {artifact.name}")
+    table.add_column("source", style="dim", no_wrap=True)
+    table.add_column("kind", style="cyan")
+    table.add_column("observation")
+    for f in facts.facts:
+        table.add_row(f.source, f.kind, f.summary)
+    out.print(table)
+    out.print(f"[dim]{len(facts.facts)} fact(s). Run with --json for the full "
+              f"structured output including verbatim excerpts.[/dim]")
+
+
 def main() -> None:
     """Entry point for `[project.scripts]` in pyproject.toml."""
     app()

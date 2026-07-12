@@ -35,6 +35,37 @@ class TestHelp:
         assert "--backend" in result.output
 
 
+class TestParse:
+    FIXTURE = "tests/fixtures/tensorrt/unsupported_op_trt8.log"
+
+    def test_parse_table_output(self):
+        result = runner.invoke(app, ["parse", self.FIXTURE])
+        assert result.exit_code == 0
+        assert "unsupported_op" in result.output
+        assert "GridSample" in result.output
+
+    def test_parse_json_output_is_valid_facts(self):
+        import json
+
+        from edgedoctor.backends.base import Facts
+
+        result = runner.invoke(app, ["parse", self.FIXTURE, "--json"])
+        assert result.exit_code == 0
+        # stdout must be parseable back into the Facts contract.
+        facts = Facts.model_validate(json.loads(result.stdout))
+        assert facts.backend == "tensorrt"
+        assert any(f.kind == "unsupported_op" for f in facts.facts)
+
+    def test_missing_file_exits_1(self):
+        result = runner.invoke(app, ["parse", "nope.log"])
+        assert result.exit_code == 1
+
+    def test_unimplemented_parser_backend_exits_1(self):
+        result = runner.invoke(app, ["parse", self.FIXTURE, "-b", "coreml"])
+        assert result.exit_code == 1
+        assert "no parser" in result.output
+
+
 class TestDiagnoseStub:
     def test_unimplemented_backend_exits_1(self):
         # Honest-stub contract: exit 1 (tool cannot do the job yet), with a

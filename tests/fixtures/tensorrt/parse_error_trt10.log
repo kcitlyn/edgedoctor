@@ -1,0 +1,9 @@
+[07/12/2026-16:41:37] [I] === Model Options ===
+[07/12/2026-16:41:37] [I] Format: ONNX
+[07/12/2026-16:41:37] [I] Model: detector.onnx
+[07/12/2026-16:41:37] [I] TensorRT version: 10.7.0
+[07/12/2026-16:41:38] [I] Start parsing network model.
+[07/12/2026-16:41:38] [E] [TRT] In node 444 with name: /head/Clip_444 and operator: Clip (parseGraph): INVALID_NODE: Invalid Node - Clip_444
+[07/12/2026-16:41:38] [E] Failed to parse onnx file
+[07/12/2026-16:41:38] [E] Parsing model failed
+&&&& FAILED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=detector.onnx

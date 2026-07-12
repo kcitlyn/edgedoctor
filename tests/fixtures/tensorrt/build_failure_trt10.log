@@ -1,0 +1,16 @@
+[07/12/2026-15:22:01] [I] === Model Options ===
+[07/12/2026-15:22:01] [I] Format: ONNX
+[07/12/2026-15:22:01] [I] Model: swin_tiny.onnx
+[07/12/2026-15:22:01] [I] TensorRT version: 10.7.0
+[07/12/2026-15:22:02] [I] Start parsing network model.
+[07/12/2026-15:22:03] [I] Finished parsing network model. Parse time: 0.94
+[07/12/2026-15:22:05] [V] [TRT] =============== Computing costs for /network.0/norm1/LayerNormalization
+[07/12/2026-15:22:05] [V] [TRT] *************** Autotuning format combination: Float(50176,1:4,224,1) -> Float(50176,1:4,224,1) ***************
+[07/12/2026-15:22:05] [V] [TRT] --------------- Timing Runner: /network.0/norm1/LayerNormalization (CaskConvolution)
+[07/12/2026-15:22:06] [W] [TRT] Skipping tactic 0x0000000000000000 due to exception Assertion status == kSTATUS_SUCCESS failed.
+[07/12/2026-15:22:06] [V] [TRT] Fastest Tactic: 0xd15ea5edd15ea5ed Time: inf
+[07/12/2026-15:22:06] [E] [TRT] IBuilder::buildSerializedNetwork: Error Code 10: Internal Error (Could not find any implementation for node /network.0/norm1/LayerNormalization.)
+[07/12/2026-15:22:06] [E] [TRT] IBuilder::buildSerializedNetwork: Error Code 2: Internal Error (Assertion engine != nullptr failed.)
+[07/12/2026-15:22:06] [E] Engine could not be created from network
+[07/12/2026-15:22:06] [E] Building the engine failed
+&&&& FAILED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=swin_tiny.onnx --saveEngine=swin.engine --fp16

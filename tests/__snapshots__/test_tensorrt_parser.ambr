@@ -1,0 +1,192 @@
+# serializer version: 1
+# name: test_snapshot[build_failure_trt10.log]
+  dict({
+    'artifact_path': 'build_failure_trt10.log',
+    'backend': 'tensorrt',
+    'facts': list([
+      dict({
+        'data': dict({
+          'version': '10.7.0',
+        }),
+        'excerpt': '[07/12/2026-15:22:01] [I] TensorRT version: 10.7.0',
+        'id': 'f1',
+        'kind': 'trt_version',
+        'source': 'build_failure_trt10.log:4',
+        'summary': 'TensorRT version 10.7.0',
+      }),
+      dict({
+        'data': dict({
+          'reason': 'exception Assertion status == kSTATUS_SUCCESS failed.',
+          'tactic': '0x0000000000000000',
+        }),
+        'excerpt': '[07/12/2026-15:22:06] [W] [TRT] Skipping tactic 0x0000000000000000 due to exception Assertion status == kSTATUS_SUCCESS failed.',
+        'id': 'f2',
+        'kind': 'tactic_skipped',
+        'source': 'build_failure_trt10.log:10',
+        'summary': 'Autotuner skipped tactic 0x0000000000000000: exception Assertion status == kSTATUS_SUCCESS failed.',
+      }),
+      dict({
+        'data': dict({
+          'node': '/network.0/norm1/LayerNormalization',
+        }),
+        'excerpt': '[07/12/2026-15:22:06] [E] [TRT] IBuilder::buildSerializedNetwork: Error Code 10: Internal Error (Could not find any implementation for node /network.0/norm1/LayerNormalization.)',
+        'id': 'f3',
+        'kind': 'no_implementation',
+        'source': 'build_failure_trt10.log:12',
+        'summary': "Builder found no kernel implementation for node '/network.0/norm1/LayerNormalization'",
+      }),
+      dict({
+        'data': dict({
+          'code': '2',
+          'detail': 'Internal Error (Assertion engine != nullptr failed.)',
+        }),
+        'excerpt': '[07/12/2026-15:22:06] [E] [TRT] IBuilder::buildSerializedNetwork: Error Code 2: Internal Error (Assertion engine != nullptr failed.)',
+        'id': 'f4',
+        'kind': 'trt_error_code',
+        'source': 'build_failure_trt10.log:13',
+        'summary': 'TensorRT reported error code 2: Internal Error (Assertion engine != nullptr failed.)',
+      }),
+      dict({
+        'data': dict({
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '&&&& FAILED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=swin_tiny.onnx --saveEngine=swin.engine --fp16',
+        'id': 'f5',
+        'kind': 'run_verdict',
+        'source': 'build_failure_trt10.log:16',
+        'summary': 'trtexec run verdict: FAILED',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[parse_error_trt10.log]
+  dict({
+    'artifact_path': 'parse_error_trt10.log',
+    'backend': 'tensorrt',
+    'facts': list([
+      dict({
+        'data': dict({
+          'version': '10.7.0',
+        }),
+        'excerpt': '[07/12/2026-16:41:37] [I] TensorRT version: 10.7.0',
+        'id': 'f1',
+        'kind': 'trt_version',
+        'source': 'parse_error_trt10.log:4',
+        'summary': 'TensorRT version 10.7.0',
+      }),
+      dict({
+        'data': dict({
+          'code': 'INVALID_NODE',
+          'func': 'parseGraph',
+          'idx': '444',
+          'name': '/head/Clip_444',
+          'op': 'Clip',
+        }),
+        'excerpt': '[07/12/2026-16:41:38] [E] [TRT] In node 444 with name: /head/Clip_444 and operator: Clip (parseGraph): INVALID_NODE: Invalid Node - Clip_444',
+        'id': 'f2',
+        'kind': 'parse_error_node',
+        'source': 'parse_error_trt10.log:6',
+        'summary': "Parse failed at node 444 ('/head/Clip_444', op Clip) with error INVALID_NODE",
+      }),
+      dict({
+        'data': dict({
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '&&&& FAILED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=detector.onnx',
+        'id': 'f3',
+        'kind': 'run_verdict',
+        'source': 'parse_error_trt10.log:9',
+        'summary': 'trtexec run verdict: FAILED',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[success.log]
+  dict({
+    'artifact_path': 'success.log',
+    'backend': 'tensorrt',
+    'facts': list([
+      dict({
+        'data': dict({
+          'version': '10.7.0',
+        }),
+        'excerpt': '[07/12/2026-17:05:44] [I] TensorRT version: 10.7.0',
+        'id': 'f1',
+        'kind': 'trt_version',
+        'source': 'success.log:4',
+        'summary': 'TensorRT version 10.7.0',
+      }),
+      dict({
+        'data': dict({
+          'verdict': 'PASSED',
+        }),
+        'excerpt': '&&&& PASSED TensorRT.trtexec [TensorRT v100700] # trtexec --onnx=mobilenetv3_small.onnx --saveEngine=mobilenet.engine --fp16',
+        'id': 'f2',
+        'kind': 'run_verdict',
+        'source': 'success.log:12',
+        'summary': 'trtexec run verdict: PASSED',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[unsupported_op_trt8.log]
+  dict({
+    'artifact_path': 'unsupported_op_trt8.log',
+    'backend': 'tensorrt',
+    'facts': list([
+      dict({
+        'data': dict({
+          'version': '8.6.1',
+        }),
+        'excerpt': '[07/12/2026-14:03:11] [I] TensorRT version: 8.6.1',
+        'id': 'f1',
+        'kind': 'trt_version',
+        'source': 'unsupported_op_trt8.log:4',
+        'summary': 'TensorRT version 8.6.1',
+      }),
+      dict({
+        'data': dict({
+          'op': 'GridSample',
+        }),
+        'excerpt': '[07/12/2026-14:03:12] [I] [TRT] No importer registered for op: GridSample. Attempting to import as plugin.',
+        'id': 'f2',
+        'kind': 'unsupported_op',
+        'source': 'unsupported_op_trt8.log:12',
+        'summary': "ONNX parser has no importer for op 'GridSample'; trying plugin fallback",
+      }),
+      dict({
+        'data': dict({
+          'plugin': 'GridSample',
+          'ver': '1',
+        }),
+        'excerpt': '[07/12/2026-14:03:12] [E] [TRT] getPluginCreator could not find plugin: GridSample version: 1',
+        'id': 'f3',
+        'kind': 'plugin_not_found',
+        'source': 'unsupported_op_trt8.log:14',
+        'summary': "No plugin named 'GridSample' (version 1) in the plugin registry",
+      }),
+      dict({
+        'data': dict({
+          'idx': '42',
+          'op': 'GridSample',
+          'output': '/decoder/grid_sample_output_0',
+        }),
+        'excerpt': '[07/12/2026-14:03:12] [E] [TRT] ModelImporter.cpp:773: While parsing node number 42 [GridSample -> "/decoder/grid_sample_output_0"]:',
+        'id': 'f4',
+        'kind': 'parse_error_node',
+        'source': 'unsupported_op_trt8.log:15',
+        'summary': "Parse failed at node 42 (op GridSample, output '/decoder/grid_sample_output_0')",
+      }),
+      dict({
+        'data': dict({
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '&&&& FAILED TensorRT.trtexec [TensorRT v8601] # trtexec --onnx=model.onnx --saveEngine=model.engine',
+        'id': 'f5',
+        'kind': 'run_verdict',
+        'source': 'unsupported_op_trt8.log:22',
+        'summary': 'trtexec run verdict: FAILED',
+      }),
+    ]),
+  })
+# ---

@@ -14,7 +14,11 @@ venv/
 env/
 
 # ── Logs / scratch ─────────────────────────────────
+# Stray logs are ignored, but corpus artifacts and test fixtures ARE the
+# product data — they must be committed.
 *.log
+!corpus/**/*.log
+!tests/fixtures/**/*.log
 
 # ── Environment ────────────────────────────────────
 .env

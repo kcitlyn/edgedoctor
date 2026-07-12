@@ -25,9 +25,7 @@ class TestBackendInterface:
 
 class TestTensorRTStub:
     def test_convert_is_honest(self):
+        # convert() still needs the NVIDIA machine — must stay an honest stub.
         with pytest.raises(NotImplementedError):
             TensorRTBackend().convert(Path("model.onnx"))
-
-    def test_parse_is_honest(self):
-        with pytest.raises(NotImplementedError):
-            TensorRTBackend().parse(Path("build.log"))
+    # parse() is now real — covered by tests/test_tensorrt_parser.py.
