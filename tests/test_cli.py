@@ -10,7 +10,10 @@ from typer.testing import CliRunner
 from edgedoctor import __version__
 from edgedoctor.cli import app
 
-runner = CliRunner()
+# NO_COLOR + fixed width make output identical everywhere. Without this, rich
+# force-enables ANSI codes on GitHub Actions (it detects CI), so string
+# assertions like `"--backend" in output` pass locally but fail in CI.
+runner = CliRunner(env={"NO_COLOR": "1", "TERM": "dumb", "COLUMNS": "100"})
 
 
 class TestVersion:
