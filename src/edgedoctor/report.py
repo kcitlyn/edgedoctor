@@ -20,6 +20,7 @@ import json
 
 from rich.console import Console
 
+from . import __version__
 from .backends.base import Diagnosis, Facts
 
 # Severity → color/style for the header.
@@ -105,7 +106,7 @@ def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
     """Serialize to the machine-readable JSON report format."""
     report = {
         "schemaVersion": 1,
-        "tool": {"name": "edgedoctor", "version": "0.1.0"},
+        "tool": {"name": "edgedoctor", "version": __version__},
         "backend": facts.backend,
         "artifact": facts.artifact_path,
         "diagnostics": [d.model_dump() for d in diagnoses],

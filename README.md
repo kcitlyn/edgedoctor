@@ -20,9 +20,10 @@ in your real artifacts, never hallucinated.
 - The underlying vendor tools (`trtexec`, Polygraphy, ETDump, `coremltools`)
   emit raw data but don't explain it.
 - The cross-vendor, LLM-grounded *explanation* layer is essentially empty. The
-  closest prior attempt ("Cellulose") is abandoned; NVIDIA's own forum
-  auto-replies with a context-blind bot that gives wrong advice — proof the pain
-  is real and unsolved.
+  closest prior attempt ("Cellulose", PyTorch→TensorRT diagnostics) has been
+  inactive since 2023; an ISSTA'24 study of model-converter failures found ~75%
+  of defects are node-conversion failures and roughly a third produce silently
+  wrong models — the pain is real, studied, and unsolved.
 - No big vendor will close it: the useful version is **cross-vendor** (against
   any one vendor's interest), it's a product/UX problem rather than an
   engineering-culture one, the TAM is small but the annoyance is high, and
@@ -33,18 +34,21 @@ in your real artifacts, never hallucinated.
 
 ## 🚧 Status — v0.1, early development
 
-This repo is **scaffold + vision**. Here is the honest state of the build:
+The first slice works: **TensorRT build-log diagnosis, fully offline** (no LLM,
+no API key). Honest state of the build:
 
-| Piece                                   | State           |
-| --------------------------------------- | --------------- |
-| Vision, architecture, roadmap docs      | ✅ done          |
-| Pluggable backend/parser interface      | ✅ scaffolded    |
-| CLI skeleton (`edgedoctor diagnose`)    | ✅ honest stub   |
-| PyTorch → TensorRT conversion slice     | 🔜 next (Phase 1) |
-| Deterministic artifact parsers          | 🔜 next (Phase 2) |
-| Grounded LLM diagnoser                  | 🔜 next (Phase 2) |
-| CoreML / ONNX-RT / TFLite backends      | 🗺️ planned       |
-| MCP server surface                      | 🗺️ planned       |
+| Piece                                        | State           |
+| -------------------------------------------- | --------------- |
+| TensorRT log parser (op failures, build errors) | ✅ works      |
+| Rule knowledge base → root cause + fix       | ✅ works (5 rules, growing) |
+| `edgedoctor diagnose` / `parse` CLI, `--json` | ✅ works       |
+| PyTorch → ONNX export + verification scripts | ✅ works        |
+| Validation against real-hardware logs        | 🔜 in progress  |
+| Accuracy divergence (FP32 vs INT8)           | 🔜 next         |
+| Optional grounded LLM synthesis layer        | 🔜 next         |
+| ONNX Runtime backend (2nd vendor)            | 🗺️ planned (Aug) |
+| CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
+| MCP server surface                           | 🗺️ planned      |
 
 We are building **one slice end-to-end first** — PyTorch → TensorRT conversion &
 accuracy diagnosis — then expanding outward. A working slice proves the universal
@@ -53,22 +57,36 @@ version is real; a half-built "everything tool" reads as vaporware. See
 
 ---
 
-## Planned UX
+## What it looks like
+
+Real output, current build:
 
 ```console
-$ edgedoctor diagnose model.onnx --backend tensorrt
+$ edgedoctor diagnose build.log
 
-✗ Conversion failed.
+error[ED0101]: op 'GridSample' is not supported by this TensorRT ONNX parser
+  --> build.log:12
+   |
+  12 | [TRT] No importer registered for op: GridSample. Attempting to import as plugin.
+   |
+   = note: The TensorRT ONNX parser has no importer for this operator, and no
+           plugin with that name was found in the plugin registry. TensorRT
+           cannot run unsupported ops on CPU — the build fails outright.
+   = help: Re-export with a newer ONNX opset — many ops gained TensorRT support
+           at higher opsets
+             torch.onnx.export(..., opset_version=17)
+   = confidence: high
 
-  Root cause:  Op `GridSample` (node /decoder/grid_sample) is not supported by
-               the TensorRT ONNX parser at opset 13.
-  Evidence:    trtexec log line 412 — "No importer registered for op: GridSample"
-  Fix:         Re-export from PyTorch with opset ≥ 16, or replace GridSample with
-               an affine_grid + bilinear sampling fallback. See docs/ops.md.
+summary: 3 errors · parsed 5 fact(s) from build.log
 ```
 
-> Every claim above is traceable to a parsed log line or measured value.
-> If edgedoctor doesn't have the evidence, it says so — it does **not** guess.
+Every rule code (`ED0101`) maps to a curated cause + fix with reference URLs.
+`--json` emits the same diagnosis as a structured document for CI and AI
+agents. Exit codes: `0` clean · `2` errors found · `3` warnings only.
+
+> Every claim is traceable to a parsed log line — the evidence block shows your
+> own log, verbatim. If edgedoctor doesn't have the evidence, it says so — it
+> does **not** guess.
 
 ---
 
@@ -76,8 +94,9 @@ $ edgedoctor diagnose model.onnx --backend tensorrt
 
 | Class                                   | Backend(s)        | State       |
 | --------------------------------------- | ----------------- | ----------- |
-| (A) Conversion / op-support failures    | TensorRT (first)  | 🔜 building  |
-| (A) CPU fallback (unsupported subgraph) | TensorRT (first)  | 🔜 building  |
+| (A) Conversion / op-support failures    | TensorRT          | ✅ working   |
+| (A) Build failures (no kernel, tactics) | TensorRT          | ✅ working   |
+| (A) CPU fallback (unsupported subgraph) | ONNX Runtime²     | 🗺️ planned   |
 | (B) Accuracy divergence (FP32 vs INT8)  | TensorRT (first)  | 🔜 building  |
 | Memory / arena overflow                 | —                 | 🗺️ planned   |
 | Performance regression (fused engines)  | —                 | ⛔ out of scope (near-term)¹ |
@@ -85,6 +104,10 @@ $ edgedoctor diagnose model.onnx --backend tensorrt
 ¹ Fused-engine latency attribution depends on undocumented post-fusion
 node→source mapping — a technical dead-end near-term, not a scope choice. It may
 return later as a research-grade frontier.
+
+² "CPU fallback" is an ONNX Runtime concept (graph partitioning across
+execution providers). A pure TensorRT engine has no per-op CPU fallback — an
+unsupported op fails the build outright, which is failure class (A) above.
 
 ---
 
@@ -102,13 +125,26 @@ return later as a research-grade frontier.
 
 ## Quickstart
 
-> ⚠️ Placeholder — the conversion + diagnosis pipeline isn't built yet. For now
-> the CLI runs and honestly reports what's implemented.
+```console
+$ git clone https://github.com/kcitlyn/edgedoctor && cd edgedoctor
+$ uv sync
+
+# Diagnose a TensorRT build log (works offline, no API key):
+$ uv run edgedoctor diagnose path/to/trtexec_build.log
+
+# Or inspect the raw extracted facts first:
+$ uv run edgedoctor parse path/to/trtexec_build.log
+$ uv run edgedoctor parse path/to/trtexec_build.log --json
+
+# Try it on a bundled example:
+$ uv run edgedoctor diagnose tests/fixtures/tensorrt/unsupported_op_trt8.log
+```
+
+To produce a log worth diagnosing (on an NVIDIA machine):
 
 ```console
-$ pip install -e .
-$ edgedoctor diagnose path/to/model.onnx --backend tensorrt
-# → prints an honest "not implemented yet — see ROADMAP.md"
+$ trtexec --onnx=model.onnx --saveEngine=model.engine --verbose > build.log 2>&1
+$ edgedoctor diagnose build.log
 ```
 
 ---

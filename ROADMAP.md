@@ -22,9 +22,10 @@ Status legend: ✅ done · 🔜 **now / next** · 🗺️ later
 The first real ML/edge slice. Agent builds + explains each step; Kaitlyn follows
 along and runs it.
 
-- [ ] Train / fine-tune an object detector in PyTorch.
-- [ ] Evaluate it (mAP / IoU / precision / recall).
-- [ ] Convert to the beachhead backend (PyTorch → ONNX → TensorRT).
+- [x] Export models to ONNX (MobileNetV3-Small, ResNet18) with validation.
+- [x] Verify ONNX vs PyTorch outputs (golden-baseline check, cosine sim 1.0).
+- [ ] Convert to the beachhead backend (ONNX → TensorRT, on the ThinkPad).
+- [ ] Train / fine-tune an object detector in PyTorch (mAP / IoU eval).
 - [ ] Deploy & measure (latency / FPS).
 - [ ] **Log every failure** — these become the tool's first real test corpus.
 
@@ -32,12 +33,17 @@ along and runs it.
 
 ## Phase 2 — Diagnoser MVP  🔜 **NEXT** (1–2 weekends)
 
-- [ ] Deterministic parsers for the Phase-1 artifacts → structured "facts".
-- [ ] Grounded LLM diagnosis for failure class **(A)** conversion / CPU fallback.
-- [ ] Grounded LLM diagnosis for failure class **(B)** accuracy divergence.
-- [ ] CLI report.
+- [x] Deterministic parser: TensorRT build logs → structured "facts"
+      (both TRT ≤8.x and 10.x error formats, verified real signatures).
+- [x] Rule knowledge base → root cause + fix, fully offline (ED0xxx codes).
+- [x] CLI report (rustc-style evidence/note/help) + `--json` for agents.
+- [ ] Validate parser + rules against real ThinkPad logs (corpus).
+- [ ] Parser + rules for failure class **(B)** accuracy divergence
+      (Polygraphy comparison output, layer-wise SQNR).
+- [ ] Optional grounded LLM synthesis layer (facts-only, cites fact ids,
+      degrades to rules-only on any failure).
 - **Done =** a 30-second demo: broken model in → cryptic log → 3 plain-English
-  sentences + a fix.
+  sentences + a fix. *(Works today on fixture logs — needs real-log validation.)*
 
 ## Phase 3+ — Expand toward the vision  🗺️ later (ongoing)
 
