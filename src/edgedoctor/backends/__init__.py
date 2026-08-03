@@ -22,6 +22,7 @@ PARSER_REGISTRY: dict[str, str] = {
     "polygraphy": "polygraphy:PolygraphyBackend",
     "onnxruntime": "onnxruntime:OnnxRuntimeBackend",
     "raspberrypi": "raspberrypi:RaspberryPiBackend",
+    "ort_profile": "ort_profile:OrtProfileBackend",
 }
 
 

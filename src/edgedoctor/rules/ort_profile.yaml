@@ -1,0 +1,137 @@
+# ONNX Runtime profiling rules — where the time actually goes.
+#
+# Same anatomy as the other rule files (see tensorrt.yaml for the field
+# reference, plus `absent`, `optional`, `conditions`).
+#
+# ED05xx = measured cost / performance attribution.
+#
+# THE CENTRAL HONESTY CONSTRAINT OF THIS FILE
+# A percentage is not a diagnosis. "Conv is 98% of runtime" is a measurement;
+# "Conv is your bottleneck, optimize it" is a conclusion that is often WRONG:
+#   - 98% of a 2 ms model may be entirely irrelevant to your application.
+#   - A profile of one or two iterations is dominated by warm-up, not steady state.
+#   - The op that costs the most may be the one doing the actual work, in which
+#     case there is nothing to fix and "optimize your convolutions" is noise.
+# So no rule here claims a bottleneck from a share alone. ED0501 requires enough
+# iterations to be meaningful, and every message states what the share is a share
+# OF so the reader can judge whether it matters.
+#
+# WHY THERE IS NO "MODEL IS TOO SLOW" RULE
+# edgedoctor cannot know your latency budget. A 200 ms model is fine for batch
+# analysis and unusable for real-time video, and nothing in a profile says which
+# you are building. Rules here describe distribution and attribution; whether
+# that is acceptable is the user's call, not the tool's.
+
+# ── ED0501: one op type dominates measured node time ──────────────────────
+# Informational, not a warning: a dominant op is normal and often correct.
+- id: ED0501
+  severity: info
+  requires: [op_cost, profile_summary]
+  absent: [few_iterations]
+  conditions:
+    - kind: op_cost
+      field: share_pct
+      min: 50
+  message: "'{op}' accounts for {share_pct}% of measured node time ({ms} ms of {total_node_ms} ms)"
+  cause: >
+    One operator type dominates the measured kernel time. This is frequently
+    normal — convolution should dominate a CNN — so it is reported as an
+    observation rather than a fault. It is useful in two ways: it tells you where
+    any optimization effort would have to go to matter at all, and if the
+    dominant op is something you did not expect to be expensive, that is a real
+    signal worth chasing. Note this measures kernel time only; it excludes
+    session setup and any time spent outside operator execution.
+  suggestions:
+    - summary: "Judge this against your actual latency budget — a large share of a fast model may need no action"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "If this op is unexpectedly expensive, check whether graph optimization fused it as intended"
+      command: "python -m onnxruntime.transformers.optimizer --input model.onnx --output opt.onnx"
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html"
+
+# ── ED0502: too few iterations to trust the timings ───────────────────────
+# Fires BEFORE any cost claim, and suppresses ED0501, because a warm-up-dominated
+# profile cannot support an attribution.
+- id: ED0502
+  severity: warning
+  requires: [few_iterations]
+  optional: [profile_summary, session_phase]
+  message: "only ~{iterations} iteration(s) were profiled — these timings include warm-up and are not steady-state"
+  cause: >
+    The first inference pass pays one-time costs that later passes do not: memory
+    arena allocation, thread-pool spin-up, cold instruction and data caches, and
+    lazily-initialized kernels. A profile of one or two runs therefore measures
+    startup as much as execution, and per-op shares computed from it can be badly
+    misleading. edgedoctor will not attribute cost from a sample this small.
+  suggestions:
+    - summary: "Re-profile with several warm-up runs before the measured ones"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Discard the first iteration entirely, then compare the remainder for stability"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html"
+
+# ── ED0503: measured cost of a cross-provider split ───────────────────────
+# The cost half of ED0301. Placement says the graph was split; this says what
+# the split actually cost, which is the question the user really has.
+- id: ED0503
+  severity: warning
+  requires: [provider_time_split]
+  absent: [few_iterations]
+  optional: [op_cost, profile_summary]
+  conditions:
+    - kind: provider_time_split
+      field: cpu_share_pct
+      min: 10
+  message: "{cpu_share_pct}% of measured node time ran on CPU despite an accelerator being present"
+  cause: >
+    Node execution was divided between providers, and a material share of the
+    measured time went to CPU. This is the measured counterpart to a placement
+    warning: a graph split matters in proportion to the time on the slow side,
+    not the node count. Note the trace attributes kernel time only — the
+    synchronization and any tensor copying at each partition boundary are largely
+    NOT visible here, so the true cost of the split is at least this much and
+    likely more.
+  suggestions:
+    - summary: "Cross-check which ops fell back (see the ED0301 diagnosis for the same run) and whether they are worth removing"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Compare end-to-end latency against a CPU-only run — a split graph is sometimes slower than not using the accelerator at all"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html"
+    - "https://onnxruntime.ai/docs/execution-providers/"
+
+# ── ED0504: session setup dwarfs inference ────────────────────────────────
+# A common measurement error rather than a model problem: people time the whole
+# script and conclude the model is slow.
+- id: ED0504
+  severity: info
+  requires: [session_phase, profile_summary]
+  absent: [few_iterations]
+  conditions:
+    - kind: session_phase
+      field: ms
+      min: 100
+  message: "session setup took {ms} ms — a one-time cost, not part of per-inference latency"
+  cause: >
+    Model loading and session initialization are paid once per process, not per
+    inference. They are reported separately because conflating them with
+    inference time is a common and consequential mistake: a script that loads a
+    model and runs it once will appear far slower than the model actually is in a
+    served setting. On constrained hardware this cost is also worth knowing in its
+    own right, since it determines cold-start time.
+  suggestions:
+    - summary: "Exclude session creation from latency benchmarks; measure it separately as cold-start cost"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "For repeated runs, create the session once and reuse it"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html"

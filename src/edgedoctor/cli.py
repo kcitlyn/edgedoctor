@@ -49,12 +49,15 @@ class BackendName(str, Enum):
         comparison BETWEEN backends, so it belongs to neither.
       - `raspberrypi` describes the HOST rather than a model — throttling and
         OOM state, which say whether a measurement is trustworthy at all.
+      - `ort_profile` is a second ONNX Runtime lane: the placement log says
+        WHERE ops ran, a profiling trace says what they COST.
     """
 
     tensorrt = "tensorrt"
     polygraphy = "polygraphy"
     onnxruntime = "onnxruntime"
     raspberrypi = "raspberrypi"
+    ort_profile = "ort_profile"
     coreml = "coreml"
     tflite = "tflite"
     executorch = "executorch"

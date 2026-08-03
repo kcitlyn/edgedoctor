@@ -41,13 +41,13 @@ no API key). Honest state of the build:
 | -------------------------------------------- | --------------- |
 | TensorRT log parser (op failures, build errors) | ✅ works      |
 | Polygraphy parser (accuracy divergence)      | ✅ works        |
-| Rule knowledge base → root cause + fix       | ✅ works (15 rules, growing) |
+| Rule knowledge base → root cause + fix       | ✅ works (25 rules, growing) |
 | `edgedoctor diagnose` / `parse` CLI, `--json` | ✅ works       |
 | PyTorch → ONNX export + verification scripts | ✅ works        |
 | Accuracy divergence (FP32 vs INT8)           | ✅ works (real corpus) |
 | Validation against real-hardware logs        | 🔜 in progress  |
 | Optional grounded LLM synthesis layer (`--llm`) | ✅ works (SDK contract verified; live model behaviour unverified) |
-| ONNX Runtime backend (2nd vendor)            | ✅ works (CPU-fallback detection) |
+| ONNX Runtime backend (2nd vendor)            | ✅ works (CPU fallback + profiling) |
 | CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
 | MCP server surface                           | 🗺️ planned      |
 
@@ -143,7 +143,9 @@ $ EDGEDOCTOR_LIVE_TESTS=1 uv run pytest tests/test_llm_live.py -v
 | (B) Accuracy divergence (FP32 vs INT8)  | Polygraphy        | ✅ working   |
 | (B) NaN / Inf in outputs                | Polygraphy        | ✅ working   |
 | (B) Layer-wise first-diverging tensor   | Polygraphy        | ✅ working   |
-| Memory / arena overflow                 | —                 | 🗺️ planned   |
+| Memory / arena overflow                 | Raspberry Pi      | ✅ working   |
+| Thermal throttling / undervoltage       | Raspberry Pi      | ✅ working   |
+| Per-op cost attribution                 | ONNX Runtime      | ✅ working   |
 | Performance regression (fused engines)  | —                 | ⛔ out of scope (near-term)¹ |
 
 ¹ Fused-engine latency attribution depends on undocumented post-fusion

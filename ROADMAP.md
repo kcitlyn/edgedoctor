@@ -38,6 +38,10 @@ along and runs it.
 - [x] Rule knowledge base → root cause + fix, fully offline (ED0xxx codes).
 - [x] CLI report (rustc-style evidence/note/help) + `--json` for agents.
 - [ ] Validate parser + rules against real ThinkPad logs (corpus).
+- [x] Pi-specific fact sources, built and tested on the Mac ahead of
+      hardware: throttle/undervoltage bitfield (ED04xx), OOM detection,
+      ORT profiling-JSON cost attribution (ED05xx), and the cross-host
+      x86-vs-ARM experiment tooling (docs/CROSS_HOST_EXPERIMENT.md).
 - [x] Parser + rules for failure class **(B)** accuracy divergence
       (Polygraphy comparison output, layer-wise first-diverging tensor,
       NaN/Inf validation — verified against a real generated corpus).
