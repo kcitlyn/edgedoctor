@@ -17,6 +17,7 @@ summary line.
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from rich.console import Console
 
@@ -35,11 +36,48 @@ MAX_EVIDENCE_SHOWN = 4
 MAX_EXCERPT_CHARS = 300
 
 
+# Max characters of a rendered message. Long enough for any real headline,
+# short enough that one diagnosis can't scroll the others off screen.
+MAX_MESSAGE_CHARS = 400
+
+# A root cause is a paragraph, so it gets more room than a headline — but still
+# bounded, so one diagnosis cannot bury the rest of the report.
+MAX_CAUSE_LINE_CHARS = 500
+MAX_CAUSE_LINES = 12
+
+# A suggestion is a single actionable sentence, plus at most one command.
+MAX_SUGGESTION_CHARS = 300
+
+
 def _clip(text: str, limit: int = MAX_EXCERPT_CHARS) -> str:
     """Shorten an over-long excerpt, marking the omission explicitly."""
     if len(text) <= limit:
         return text
     return f"{text[:limit]}… (+{len(text) - limit} chars, use --json for the full line)"
+
+
+def _oneline(text: str, limit: int = MAX_MESSAGE_CHARS) -> str:
+    """Flatten a single-line field so it cannot forge report structure.
+
+    THIS IS A SECURITY BOUNDARY, not cosmetics. The report's structure IS its
+    meaning: `error[ED0101]: ...` at the start of a line means "edgedoctor
+    asserts this", and `= help:` means "edgedoctor recommends this". A newline
+    inside a one-line field lets its content start a new line that mimics either,
+    producing a fabricated diagnosis or a fabricated recommendation that a reader
+    cannot distinguish from a real one.
+
+    That is reachable in practice: the LLM synthesis layer builds `message` and
+    `root_cause` from parsed log content, so a crafted log could carry
+    "ok\\nerror[ED0101]: run rm -rf /" into a header position. Rule-authored text
+    is trusted, but the renderer must not depend on its input being trusted.
+
+    Carriage returns are stripped too — on a terminal, `\\r` rewinds to the line
+    start, so trailing text can visually overwrite what preceded it.
+    """
+    flattened = " ".join(str(text).split())
+    if len(flattened) <= limit:
+        return flattened
+    return f"{flattened[:limit]}… (truncated, use --json for the full text)"
 
 # Severity → color/style for the header.
 _SEVERITY_STYLE = {
@@ -75,9 +113,15 @@ def render_human(
         # generated on the spot — they carry very different weight, and an
         # unmarked synthesis would borrow trust the rules earned.
         marker = " [magenta](synthesized)[/magenta]" if diag.origin == "llm" else ""
+        # The message is printed with markup=False so a message containing
+        # "[bold red]" can't restyle the report, and flattened by _oneline so it
+        # can't start a line that mimics a header. The prefix is printed
+        # separately because it is OUR text and does need its styling.
         con.print(
-            f"[{style}]{diag.severity}[{diag.code}][/{style}]{marker}: {diag.message}"
+            f"[{style}]{diag.severity}[{diag.code}][/{style}]{marker}: ", end=""
         )
+        con.print(_oneline(diag.message), markup=False, highlight=False,
+                  soft_wrap=True)
 
         # Evidence block — show the user's own log lines.
         # Capped: a layer-wise Polygraphy run can cite ~200 facts for one
@@ -118,20 +162,39 @@ def render_human(
 
         # Note (the "why").
         if diag.root_cause:
-            # Wrap long text to terminal width, indented under " = note:"
-            lines = diag.root_cause.splitlines()
-            con.print(f"   = [bold]note:[/bold] {lines[0]}")
-            for line in lines[1:]:
-                con.print(f"          {line}")
+            # Multi-line causes are legitimate (rule authors write paragraphs),
+            # but every continuation line is INDENTED so it cannot begin at
+            # column 0 where a forged "error[...]" header would live, and each
+            # is printed with markup disabled.
+            lines = str(diag.root_cause).splitlines() or [""]
+            con.print("   = [bold]note:[/bold] ", end="")
+            con.print(_oneline(lines[0], limit=MAX_CAUSE_LINE_CHARS),
+                      markup=False, highlight=False, soft_wrap=True)
+            for line in lines[1:MAX_CAUSE_LINES]:
+                con.print("          ", end="")
+                con.print(_oneline(line, limit=MAX_CAUSE_LINE_CHARS),
+                          markup=False, highlight=False, soft_wrap=True)
+            if len(lines) > MAX_CAUSE_LINES:
+                con.print(f"          [dim]... ({len(lines) - MAX_CAUSE_LINES} "
+                          f"more line(s), use --json)[/dim]")
 
         # Help (the "fix").
         for sug in diag.suggestions:
             label = "help"
             if sug.applicability == "machine-applicable":
                 label = "help (safe to apply)"
-            con.print(f"   = [bold green]{label}:[/bold green] {sug.summary}")
+            # Flattened for the same reason as the message: "help (safe to
+            # apply)" is a claim edgedoctor makes about a command's safety, so a
+            # suggestion that could forge that line could get an unreviewed
+            # command run unattended by an agent.
+            con.print(f"   = [bold green]{label}:[/bold green] ", end="")
+            con.print(_oneline(sug.summary, limit=MAX_SUGGESTION_CHARS),
+                      markup=False, highlight=False, soft_wrap=True)
             if sug.command:
-                con.print(f"             [cyan]{sug.command}[/cyan]")
+                con.print("             ", end="")
+                con.print(_oneline(sug.command, limit=MAX_SUGGESTION_CHARS),
+                          markup=False, highlight=False, soft_wrap=True,
+                          style="cyan")
 
         # Confidence.
         con.print(f"   = [dim]confidence: {diag.confidence}[/dim]")
@@ -158,7 +221,21 @@ def render_human(
 
 
 def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
-    """Serialize to the machine-readable JSON report format."""
+    """Serialize to the machine-readable JSON report format.
+
+    Emits SPEC-COMPLIANT JSON. Two of Python's json defaults would otherwise
+    produce output that strict consumers reject, and `--json` exists precisely
+    to be piped into those (`| jq`, JS, Go):
+
+      - allow_nan=False: Python defaults to writing bare `NaN`/`Infinity`, which
+        are not valid JSON. A fact could carry a non-finite float (a malformed
+        `temp=inf` reading, say), so we serialize such values as their string
+        form via `default` rather than emitting a token jq would choke on.
+      - default=str: a Fact.data value that isn't JSON-native (a set, a Path)
+        would raise TypeError mid-serialization and abort the whole report.
+        Coercing to str keeps the report producible; parsers should emit native
+        types, but the output path must not depend on their doing so.
+    """
     report = {
         "schemaVersion": 1,
         "tool": {"name": "edgedoctor", "version": __version__},
@@ -167,4 +244,38 @@ def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
         "diagnostics": [d.model_dump() for d in diagnoses],
         "facts": [f.model_dump() for f in facts.facts],
     }
-    return json.dumps(report, indent=2)
+
+    def _fallback(obj: Any) -> str:
+        # Reached for non-serializable values (sets, Paths, ...). Non-finite
+        # floats do NOT reach here — allow_nan=False raises on them first — so
+        # they are handled by the pre-pass below.
+        return str(obj)
+
+    # allow_nan=False makes json.dumps raise ValueError on inf/nan instead of
+    # emitting an invalid token. We catch that and retry with the floats
+    # sanitized, so the common (finite) case pays no cost.
+    try:
+        return json.dumps(report, indent=2, allow_nan=False, default=_fallback)
+    except ValueError:
+        return json.dumps(
+            _finite_only(report), indent=2, allow_nan=False, default=_fallback
+        )
+
+
+def _finite_only(obj: Any) -> Any:
+    """Recursively replace non-finite floats with their string form.
+
+    NaN/Infinity aren't valid JSON, but they ARE real values a parser might
+    carry (a divergence metric, a malformed sensor reading). Dropping them would
+    lose information; stringifying them keeps the value visible and the document
+    valid.
+    """
+    import math
+
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return str(obj)  # "inf", "-inf", "nan"
+    if isinstance(obj, dict):
+        return {k: _finite_only(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_finite_only(v) for v in obj]
+    return obj

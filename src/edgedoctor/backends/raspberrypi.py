@@ -91,7 +91,20 @@ def decode_throttled(value: int) -> dict[str, Any]:
     Undocumented set bits are reported under `unknown_bits` rather than ignored:
     a bit we can't explain is itself worth surfacing, and inventing a meaning for
     it would violate the grounding discipline.
+
+    Negative input raises. A bitfield cannot be negative, and Python's two's
+    complement would make `-1` decode as "every condition set at once" with a
+    nonsensical `0x-1` — a fabricated hardware emergency. The parser's regex
+    can't produce a negative, but this is exported and callable directly, so it
+    refuses rather than trusting its caller.
     """
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"throttled bitfield must be an int, got {type(value).__name__}")
+    if value < 0:
+        raise ValueError(
+            f"throttled bitfield cannot be negative (got {value}); "
+            "a negative value would decode as every condition set at once"
+        )
     live = [key for bit, (key, _) in LIVE_BITS.items() if value & (1 << bit)]
     sticky = [key for bit, (key, _) in STICKY_BITS.items() if value & (1 << bit)]
     unknown = [
@@ -130,7 +143,13 @@ _SIGNATURES: list[_Sig] = [
     (
         "throttled_bitfield",
         re.compile(
-            r"throttled\s*=\s*(?:0x(?P<hex>[0-9a-fA-F]+)|(?P<dec>\d+))\b"
+            # Bounded to prevent quadratic backtracking, but generously: the
+            # real field is 32 bits (8 hex digits), so 32 digits accepts any
+            # plausible firmware widening while still capping the work. A value
+            # longer than this is not silently dropped — it fails the \b and is
+            # simply not a throttle reading, which is the honest outcome for
+            # something that cannot be a bitfield.
+            r"throttled\s*=\s*(?:0x(?P<hex>[0-9a-fA-F]{1,32})|(?P<dec>\d{1,32}))\b"
         ),
         lambda m: (
             f"vcgencmd get_throttled = 0x{m['hex'].upper()}"
@@ -145,7 +164,7 @@ _SIGNATURES: list[_Sig] = [
     ),
     (
         "arm_clock",
-        re.compile(r"frequency\((?P<clock_id>\d+)\)\s*=\s*(?P<hertz>\d+)"),
+        re.compile(r"frequency\((?P<clock_id>\d{1,8})\)\s*=\s*(?P<hertz>\d{1,20})"),
         lambda m: f"Arm clock {int(m['hertz']) // 1_000_000} MHz",
     ),
     # ── Kernel OOM killer ─────────────────────────────────────────────────
@@ -154,24 +173,35 @@ _SIGNATURES: list[_Sig] = [
     (
         "oom_kill",
         re.compile(
-            r"Out of memory: Killed process (?P<pid>\d+) \((?P<process>[^)]+)\)"
+            r"Out of memory: Killed process (?P<pid>\d{1,12}) \((?P<process>[^)\n]{1,256})\)"
         ),
         lambda m: f"Kernel OOM-killed process '{m['process']}' (pid {m['pid']})",
     ),
     (
         "oom_invoked",
+        # PERFORMANCE, not style. Two fixes here, both load-bearing:
+        #   1. The invoker group is BOUNDED ({1,128}). Unbounded `[\w./-]+`
+        #      before a literal made this O(n^2) — a 200 KB line hung the parser
+        #      for minutes, a real DoS since we parse untrusted logs.
+        #   2. `.*?order=` became `[^\n]{0,200}?order=`, so the lazy scan can't
+        #      wander the whole line looking for a literal that isn't there.
+        # Covered by tests/test_parser_robustness.py.
         re.compile(
-            r"(?P<invoker>[\w./-]+) invoked oom-killer: "
-            r"gfp_mask=(?P<gfp_mask>\S+?),.*?order=(?P<order>-?\d+)"
+            r"(?P<invoker>[\w./-]{1,128}) invoked oom-killer: "
+            r"gfp_mask=(?P<gfp_mask>\S{1,64}?),[^\n]{0,200}?order=(?P<order>-?\d+)"
         ),
         lambda m: f"'{m['invoker']}' triggered the kernel OOM killer",
     ),
     (
         "oom_memory_summary",
+        # Quantifiers bounded for the same reason as oom_invoked above:
+        # `(?P<pages>\d+) pages RAM` is an unbounded class before a literal, so
+        # a long digit run made matching quadratic. No real kernel log reports a
+        # page count with more than 32 digits.
         re.compile(
             r"Mem-Info:|"
-            r"Total swap = (?P<total_swap>\d+)kB|"
-            r"(?P<pages>\d+) pages RAM"
+            r"Total swap = (?P<total_swap>\d{1,32})kB|"
+            r"(?P<pages>\d{1,32}) pages RAM"
         ),
         lambda m: "Kernel memory summary at OOM time",
     ),
@@ -180,7 +210,7 @@ _SIGNATURES: list[_Sig] = [
     (
         "allocation_failed",
         re.compile(
-            r"Failed to allocate memory for requested buffer of size (?P<bytes>\d+)"
+            r"Failed to allocate memory for requested buffer of size (?P<bytes>\d{1,32})"
             r"|bad_alloc|std::bad_alloc"
         ),
         lambda m: (

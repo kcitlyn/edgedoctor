@@ -82,11 +82,23 @@ _SIGNATURES: list[_Sig] = [
     # node count, because each boundary is a synchronization point.
     (
         "provider_capability",
+        # PERFORMANCE, not style: the provider group is bounded and the pattern
+        # leads with a LITERAL. An earlier version began with `(?P<provider>\w+)`
+        # followed by "::GetCapability", which made matching O(n^2) — on a long
+        # run of word characters the engine retries the literal from every start
+        # position. A single 200 KB line hung the parser for minutes. Real logs
+        # do contain very long lines, so this is a genuine DoS on untrusted
+        # input, not a hypothetical. Covered by tests/test_parser_robustness.py.
+        # The provider group is BOUNDED ({1,64}); an unbounded `\w+` here is what
+        # caused the blow-up, because it could start anywhere in a long word run.
+        # A bounded quantifier caps the backtracking work per start position.
         re.compile(
-            r"(?P<provider>\w+)::GetCapability, number of partitions supported by "
-            r"(?P<short_name>\w+): (?P<partitions>\d+) "
+            r"(?P<provider>\w{1,64})::GetCapability, "
+            r"number of partitions supported by "
+            r"(?P<short_name>\w{1,64}): (?P<partitions>\d+) "
             r"number of nodes in the graph: (?P<graph_nodes>\d+) "
-            r"number of nodes supported by (?P<short_name2>\w+): (?P<supported>\d+)"
+            r"number of nodes supported by (?P<short_name2>\w{1,64}): "
+            r"(?P<supported>\d+)"
         ),
         lambda m: (
             f"{m['provider']} claimed {m['supported']}/{m['graph_nodes']} nodes "
