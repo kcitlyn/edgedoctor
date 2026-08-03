@@ -136,9 +136,14 @@ class TestLlmFlag:
         result = runner.invoke(app, ["diagnose", "--help"])
         assert "--llm" in result.output
 
-    def test_missing_key_explains_itself(self):
+    def test_unavailable_llm_explains_itself(self):
+        # Asserts the INVARIANT, not the specific reason: the reason legitimately
+        # differs by environment (missing key locally, missing SDK in CI, since
+        # anthropic is an optional extra that `uv sync` doesn't install). The
+        # contract is that --llm doing nothing is always explained, never silent.
         result = self.keyless.invoke(app, ["diagnose", self.FIXTURE, "--llm"])
-        assert "ANTHROPIC_API_KEY" in result.output
+        assert "--llm requested but" in result.output
+        assert "rules-only" in result.output
 
     def test_missing_key_preserves_exit_code(self):
         # An unavailable optional enhancement must not change the verdict.
