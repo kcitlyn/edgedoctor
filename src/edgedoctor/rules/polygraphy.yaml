@@ -1,0 +1,155 @@
+# Polygraphy diagnosis rules — failure class (B), accuracy divergence.
+#
+# Same anatomy as tensorrt.yaml (see that file's header for the field reference),
+# plus two fields this family needs:
+#   absent:   fact kinds that must NOT be present, or the rule is the wrong
+#             explanation. Guards against firing on logs that also contain
+#             contradicting evidence.
+#   optional: fact kinds cited as supporting evidence when present, but which
+#             never decide whether the rule fires.
+#
+# ED02xx = accuracy / numeric divergence.
+#
+# THE CENTRAL HONESTY CONSTRAINT OF THIS FILE
+# The numeric lines in a Polygraphy log (Average Metrics, Minimum Required
+# Tolerance) are byte-identical between a passing and a failing comparison of
+# the same model — tolerance is a policy, not a measurement. So no rule here may
+# `require` a magnitude fact. Every error rule requires a VERDICT fact and only
+# lists magnitudes as `optional` evidence. The corpus pair
+# int8_vs_fp32_pass.log / int8_vs_fp32_fail.log is the regression test.
+
+# ── ED0201: divergence beyond tolerance ───────────────────────────────────
+# Fires on the per-output FAILED verdict, never on the size of the difference.
+- id: ED0201
+  severity: error
+  requires: [output_mismatch]
+  absent: [all_outputs_matched]
+  optional: [required_tolerance, divergence_metrics, tolerance_setting]
+  message: "output '{output}' diverges beyond the comparison tolerance"
+  cause: >
+    The two runners produced numerically different values for this output.
+    Polygraphy's default tolerance (abs=1e-05, rel=1e-05) is an FP32-vs-FP32
+    tolerance, so a reduced-precision run (FP16/INT8) will normally exceed it
+    even when the model is fine. The evidence includes the minimum tolerance
+    that WOULD have passed — compare that against what your application can
+    actually absorb before concluding the model is broken.
+  suggestions:
+    - summary: "Judge the model on a task metric (accuracy / mAP / top-1), not on elementwise tolerance — that is what users experience"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Find the FIRST layer where error appears, rather than looking only at the final output"
+      command: "polygraphy run <model> --onnxrt --onnx-outputs mark all --load-outputs <baseline>.json"
+      applicability: machine-applicable
+    - summary: "If the divergence is expected for the precision, set a tolerance that reflects it and re-run"
+      command: "polygraphy run ... --atol <value> --rtol <value>"
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/blob/main/tools/Polygraphy/how-to/debug_accuracy.md"
+    - "https://github.com/NVIDIA/TensorRT/tree/main/tools/Polygraphy/examples/cli/run/01_comparing_frameworks"
+
+# ── ED0202: many outputs diverged (layer-wise run) ────────────────────────
+# The actionable fact in a `--onnx-outputs mark all` run is WHICH tensor
+# diverged first, since everything downstream inherits that error.
+- id: ED0202
+  severity: error
+  requires: [mismatched_outputs]
+  absent: [shape_mismatch]
+  optional: [required_tolerance]
+  # Only fires for multi-output runs. With a single diverging output this rule
+  # would just restate ED0201, and its "which layer came first" reasoning would
+  # be meaningless — there is no ordering among one tensor.
+  conditions:
+    - kind: mismatched_outputs
+      field: count
+      min: 2
+  message: "{count} output tensors failed comparison; the earliest reported is '{first_output}'"
+  cause: >
+    Polygraphy compared multiple output tensors and more than one diverged.
+    When the run marked all intermediate tensors as outputs, the first tensor
+    listed is the earliest point in the graph where error appears — every
+    downstream mismatch may simply be inheriting it. Error that starts at the
+    very first layer and grows steadily suggests broad weight quantization
+    error; error that appears abruptly at one layer points at that layer.
+  suggestions:
+    - summary: "Inspect the earliest diverging tensor's producing layer in the graph"
+      command: "polygraphy inspect model <model>.onnx --show layers"
+      applicability: machine-applicable
+    - summary: "Extract the failing subgraph to get a minimal reproducer"
+      command: "polygraphy surgeon extract <model>.onnx --inputs <input> --outputs <first-diverging-tensor>"
+      applicability: maybe-incorrect
+    - summary: "Confirm the failure still reproduces WITH all outputs marked — marking outputs can itself change optimization"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/blob/main/tools/Polygraphy/how-to/debug_accuracy.md"
+
+# ── ED0203: NaN / Inf — categorically worse than divergence ───────────────
+- id: ED0203
+  severity: error
+  requires: [nan_detected]
+  optional: [inf_detected, validation_failed]
+  message: "output contains NaN values — the model is producing invalid numbers, not merely inaccurate ones"
+  cause: >
+    NaN in an output is a different class of problem from tolerance divergence:
+    the computation broke rather than drifted, and no tolerance setting can make
+    it acceptable. Typical causes are overflow in reduced precision (values
+    exceeding the FP16 range of ~65504), division by zero, or an invalid
+    operation such as sqrt of a negative number. NaN propagates, so the first
+    occurrence in the graph is the one that matters.
+  suggestions:
+    - summary: "Locate where NaN first appears by marking all tensors as outputs and validating each"
+      command: "polygraphy run <model> --onnxrt --onnx-outputs mark all --validate"
+      applicability: machine-applicable
+    - summary: "If running FP16, test in FP32 to confirm the cause is range overflow rather than the model itself"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Check the input data is valid — NaN in, NaN out"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/blob/main/tools/Polygraphy/how-to/debug_accuracy.md"
+
+# ── ED0204: shape mismatch — a harness bug, not an accuracy problem ───────
+# Separated from ED0201 deliberately: nothing was measured here, so any
+# accuracy claim would be unfounded. The fix is completely different.
+- id: ED0204
+  severity: error
+  requires: [shape_mismatch]
+  optional: [shape_detail]
+  message: "output '{output}' was not compared at all — the two runners' output shapes differ"
+  cause: >
+    Polygraphy refused to compare these tensors because their shapes disagree,
+    so NO accuracy conclusion can be drawn from this log in either direction.
+    This is a harness/setup error: almost always the two sides ran at different
+    input shapes or batch sizes, or a dynamic dimension resolved differently.
+  suggestions:
+    - summary: "Run both sides at identical input shapes, then compare again"
+      command: "polygraphy run <model> --onnxrt --input-shapes input:[1,3,224,224]"
+      applicability: maybe-incorrect
+    - summary: "Check the model's declared input shapes, including dynamic axes"
+      command: "polygraphy inspect model <model>.onnx"
+      applicability: machine-applicable
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/tree/main/tools/Polygraphy/examples/cli/run"
+
+# ── ED0205: divergence measured but WITHIN tolerance (informational) ──────
+# The tool must be as clear about "this passed" as about "this failed".
+# Requires the passing verdict, so it cannot fire on a failing log.
+- id: ED0205
+  severity: info
+  requires: [all_outputs_matched]
+  absent: [output_mismatch, nan_detected]
+  optional: [required_tolerance, divergence_metrics, tolerance_setting]
+  message: "all compared outputs matched within tolerance"
+  cause: >
+    The comparison passed. The evidence still records the measured divergence
+    and the minimum tolerance that would have been required — worth reading,
+    because a pass at a very loose tolerance is weaker evidence of correctness
+    than a pass at a tight one. Elementwise tolerance is a proxy; a task metric
+    is the real test.
+  suggestions:
+    - summary: "Confirm the tolerance used is one your application can actually absorb"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://github.com/NVIDIA/TensorRT/tree/main/tools/Polygraphy/examples/cli/run"

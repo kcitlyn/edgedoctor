@@ -43,9 +43,15 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
 
     Matching logic (deliberately simple — complexity goes in the rules, not here):
       - A rule fires if ALL of its `requires` fact kinds are present in `facts`.
-      - Placeholders in `message` (e.g. `{op}`) are filled from the first fact
-        of the first matching kind's `data` dict.
-      - Evidence is the list of fact ids whose kind matched a `requires` entry.
+      - A rule does NOT fire if any of its `absent` fact kinds are present.
+        This is how a rule stays honest about context it must not ignore (e.g.
+        "diverged" must not fire when the log also says "all outputs matched").
+      - `optional` kinds never affect whether a rule fires; they are pulled in
+        as extra evidence and placeholder values when present. This is what
+        lets a rule cite a measured number it doesn't depend on.
+      - Placeholders in `message` (e.g. `{op}`) are filled from the matched
+        facts' `data` dicts (first fact wins per key).
+      - Evidence is the list of ids of the facts that matched.
 
     Returns an empty list if no rules match — the tool then honestly reports
     "no known pattern matched" rather than guessing.
@@ -64,8 +70,24 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
         if not required.issubset(fact_kinds_present):
             continue
 
-        # Gather evidence: all facts whose kind is in the required set.
+        # Disqualifying context: any of these present means this rule is the
+        # wrong explanation, regardless of what else matched.
+        forbidden = set(rule.get("absent", []))
+        if forbidden & fact_kinds_present:
+            continue
+
+        # Numeric thresholds on a fact's data field. Needed because presence
+        # alone can't distinguish "one output diverged" from "forty-nine did",
+        # and those warrant different explanations.
+        if not _conditions_met(rule.get("conditions", []), facts):
+            continue
+
+        # Gather evidence: required kinds, plus any optional kinds that happen
+        # to be present. Required facts come first so the report shows the
+        # proof before the supporting measurements.
+        optional = set(rule.get("optional", []))
         evidence_facts = [f for f in facts.facts if f.kind in required]
+        evidence_facts += [f for f in facts.facts if f.kind in optional]
         evidence_ids = [f.id for f in evidence_facts]
 
         # Build a placeholder dict from the matched facts' data fields.
@@ -110,6 +132,43 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
     severity_rank = {"error": 0, "warning": 1, "info": 2}
     results.sort(key=lambda d: severity_rank.get(d.severity, 9))
     return results
+
+
+def _conditions_met(conditions: list[dict[str, Any]], facts: Facts) -> bool:
+    """Check numeric threshold conditions declared by a rule.
+
+    Each condition looks like:
+        {kind: mismatched_outputs, field: count, min: 2}
+
+    Semantics: at least one fact of `kind` must have `field` satisfying the
+    bound(s). A condition whose fact/field is missing or non-numeric FAILS —
+    a rule may never fire on evidence that isn't actually there. Supported
+    bounds: `min` (>=) and `max` (<=).
+    """
+    for cond in conditions:
+        kind = cond.get("kind")
+        field = cond.get("field")
+        lo, hi = cond.get("min"), cond.get("max")
+        if not any(
+            _satisfies(f.data.get(field), lo, hi)
+            for f in facts.facts
+            if f.kind == kind
+        ):
+            return False
+    return True
+
+
+def _satisfies(value: Any, lo: Any, hi: Any) -> bool:
+    """True if `value` is numeric and within the [lo, hi] bounds given."""
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return False
+    if lo is not None and num < float(lo):
+        return False
+    if hi is not None and num > float(hi):
+        return False
+    return True
 
 
 class _SafeDict(dict):
