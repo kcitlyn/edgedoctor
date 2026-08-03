@@ -1,0 +1,165 @@
+# ONNX Runtime diagnosis rules — failure class (A), CPU fallback / EP placement.
+#
+# Same anatomy as tensorrt.yaml and polygraphy.yaml (see those headers for the
+# field reference, including `absent`, `optional` and `conditions`).
+#
+# ED03xx = execution-provider placement and fallback.
+#
+# THE CENTRAL HONESTY CONSTRAINT OF THIS FILE
+# "All nodes placed on [CPUExecutionProvider]" is EITHER completely fine OR the
+# entire problem, and the line itself cannot tell you which. A deliberate
+# CPU-only session is byte-identical to an accelerator that silently failed to
+# load. So no rule here may fire on a placement line alone — it must also see
+# what was REQUESTED. The corpus pair ort_cpu_only.log (intentional, no
+# diagnosis) and ort_missing_provider.log (silent degradation, ED0302) is the
+# regression test for that, exactly as the pass/fail pair is for polygraphy.yaml.
+#
+# The other trap: ORT SUCCEEDS in all of these cases. Exit status tells you
+# nothing. That is why this class needs a diagnostician at all.
+
+# ── ED0301: graph split across providers (partial CPU fallback) ───────────
+# The core ORT failure mode. Requires the derived `split_execution` fact, which
+# only exists when more than one provider actually received nodes.
+- id: ED0301
+  severity: warning
+  requires: [split_execution]
+  # Order matters: the report caps evidence blocks, so the ops that actually
+  # fell back are listed FIRST — they are what the user can act on. Raw
+  # per-provider counts are context and can be cut.
+  optional: [cpu_fallback_ops, provider_capability]
+  message: "graph is split across execution providers — {cpu_node_groups} node group(s) fell back to CPU"
+  cause: >
+    ONNX Runtime asks each execution provider, in the order you listed them,
+    which nodes it can run; anything no accelerator claims falls to CPU, which is
+    the guaranteed last resort. The session therefore SUCCEEDS and reports no
+    error — you simply get a model slower than the hardware you paid for.
+    The cost is dominated by the NUMBER OF PARTITIONS rather than the number of
+    CPU nodes: every boundary between providers is a synchronization point, and
+    on accelerators with separate memory it also means copying tensors back and
+    forth. A few unsupported ops scattered through a graph are far more expensive
+    than the same ops grouped together at one end.
+  suggestions:
+    - summary: "Identify the ops that fell back, then replace or remove them — that is what re-joins the partitions"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Check the partition count, not just the node count — fewer, larger partitions beat many small ones"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Confirm which providers the session actually got, rather than which you requested"
+      command: "python -c \"import onnxruntime as ort; print(ort.InferenceSession('model.onnx').get_providers())\""
+      applicability: machine-applicable
+  refs:
+    - "https://onnxruntime.ai/docs/execution-providers/"
+    - "https://onnxruntime.ai/docs/performance/tune-performance/troubleshooting.html"
+
+# ── ED0302: requested provider unavailable — silently ran on CPU ──────────
+# The most misleading case in ORT: your code says "use the accelerator", the run
+# succeeds, and you are benchmarking CPU. Distinct from ED0301 because nothing
+# was split — the accelerator never participated at all.
+- id: ED0302
+  severity: error
+  requires: [silent_cpu_only]
+  optional: [provider_unavailable, session_providers, all_nodes_one_provider]
+  message: "requested provider '{requested}' is unavailable — the entire model ran on CPU"
+  cause: >
+    ONNX Runtime treats the provider list as a preference, not a requirement. A
+    provider that isn't compiled into the installed wheel is dropped with a
+    warning and execution continues on CPU, so the session initializes
+    successfully and inference returns correct results. Nothing fails. The only
+    symptom is performance — which is why this is usually discovered as a
+    mysterious benchmark result rather than as an error. It is most often an
+    install mismatch: `onnxruntime` (CPU-only) where `onnxruntime-gpu` was meant,
+    or a wheel built without the accelerator for this platform.
+  suggestions:
+    - summary: "Install the onnxruntime build that actually contains the provider you need"
+      command: "pip install onnxruntime-gpu"
+      applicability: maybe-incorrect
+    - summary: "Assert on the providers after constructing the session, so this fails loudly instead of silently"
+      command: "assert 'CUDAExecutionProvider' in sess.get_providers()"
+      applicability: machine-applicable
+    - summary: "List the providers this build supports before choosing one"
+      command: "python -c \"import onnxruntime as ort; print(ort.get_available_providers())\""
+      applicability: machine-applicable
+  refs:
+    - "https://onnxruntime.ai/docs/execution-providers/"
+    - "https://onnxruntime.ai/docs/install/"
+
+# ── ED0303: many ops fell back — likely an opset/EP coverage problem ──────
+# Fires only when the fallback is broad, since a couple of stray ops warrants
+# different advice than half the graph.
+- id: ED0303
+  severity: warning
+  requires: [cpu_fallback_ops]
+  absent: [silent_cpu_only]
+  optional: [provider_capability, split_execution]
+  conditions:
+    - kind: cpu_fallback_ops
+      field: count
+      min: 3
+  message: "{count} ops fell back to CPU (first: '{first_op}') — the provider covers little of this graph"
+  cause: >
+    When many distinct ops land on CPU, the usual cause is not one exotic layer
+    but a systematic gap: the model uses an opset the provider's kernels don't
+    cover, or a family of ops (dynamic shapes, control flow, unusual reductions)
+    this provider doesn't implement at all. Each provider supports a documented
+    subset of ONNX ops, and that subset varies by provider and by build.
+  suggestions:
+    - summary: "Check the provider's supported-operator list for the ops named in the evidence"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Try re-exporting at a different opset — provider kernel coverage differs by opset"
+      command: "torch.onnx.export(..., opset_version=17)"
+      applicability: maybe-incorrect
+    - summary: "Run ORT's own optimizer first; graph fusion sometimes removes the unsupported pattern"
+      command: "python -m onnxruntime.transformers.optimizer --input model.onnx --output opt.onnx"
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/reference/operators/OperatorKernels.html"
+    - "https://onnxruntime.ai/docs/execution-providers/"
+
+# ── ED0304: session failed to construct ──────────────────────────────────
+- id: ED0304
+  severity: error
+  requires: [session_failed]
+  message: "the ONNX Runtime session could not be created"
+  cause: >
+    Session construction failed outright, so no placement happened at all and no
+    conclusion about providers or performance can be drawn from this log. This is
+    a load-time problem — a malformed or truncated model file, an opset newer
+    than the installed runtime, or an unresolvable external-data reference.
+  suggestions:
+    - summary: "Validate the model independently of the runtime"
+      command: "python -c \"import onnx; onnx.checker.check_model('model.onnx')\""
+      applicability: machine-applicable
+    - summary: "Compare the model's opset against what this onnxruntime version supports"
+      command: "python -c \"import onnx; m=onnx.load('model.onnx'); print(m.opset_import)\""
+      applicability: machine-applicable
+  refs:
+    - "https://onnxruntime.ai/docs/reference/compatibility.html"
+
+# ── ED0305: clean single-provider execution (informational) ──────────────
+# The negative control. Requires the accelerator case specifically: it must NOT
+# fire for an all-CPU session, because "everything on CPU" is only good news if
+# CPU is what you wanted, and this rule cannot know that.
+- id: ED0305
+  severity: info
+  requires: [all_nodes_one_provider]
+  absent: [split_execution, silent_cpu_only, provider_unavailable, session_failed]
+  optional: [provider_capability, session_providers]
+  conditions:
+    - kind: provider_capability
+      field: partitions
+      max: 1
+  message: "all nodes ran on a single execution provider — no fallback, no partition boundaries"
+  cause: >
+    The whole graph was claimed by one provider, so there is no host/device
+    boundary inside it and no cross-provider copying. This is the ideal placement
+    outcome. Note that this rule requires evidence that an accelerator claimed
+    the graph — an all-CPU session produces no diagnosis here, because whether
+    that is correct depends on what you asked for, and the log alone cannot say.
+  suggestions:
+    - summary: "Nothing to fix. To keep it this way, re-check placement after any model or opset change"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/execution-providers/"
