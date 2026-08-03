@@ -1,0 +1,6 @@
++ vcgencmd get_throttled
+throttled=0x0
++ vcgencmd measure_temp
+temp=47.8'C
++ vcgencmd measure_clock arm
+frequency(0)=2400000000

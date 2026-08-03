@@ -1,0 +1,329 @@
+# serializer version: 1
+# name: test_snapshot[allocation_failed.log]
+  dict({
+    'artifact_path': 'allocation_failed.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'bytes': 1073741824,
+          'mib': 1024.0,
+        }),
+        'excerpt': 'onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: Failed to allocate memory for requested buffer of size 1073741824',
+        'id': 'f1',
+        'kind': 'allocation_failed',
+        'source': 'allocation_failed.log:2',
+        'summary': 'Allocator failed to reserve 1,073,741,824 bytes',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[oom_kill.log]
+  dict({
+    'artifact_path': 'oom_kill.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'gfp_mask': '0x140dca(GFP_HIGHUSER_MOVABLE|__GFP_COMP|__GFP_ZERO)',
+          'invoker': 'python3',
+          'order': '0',
+        }),
+        'excerpt': '[ 1823.442156] python3 invoked oom-killer: gfp_mask=0x140dca(GFP_HIGHUSER_MOVABLE|__GFP_COMP|__GFP_ZERO), order=0, oom_score_adj=0',
+        'id': 'f1',
+        'kind': 'oom_invoked',
+        'source': 'oom_kill.log:1',
+        'summary': "'python3' triggered the kernel OOM killer",
+      }),
+      dict({
+        'data': dict({
+        }),
+        'excerpt': '[ 1823.442312] Mem-Info:',
+        'id': 'f2',
+        'kind': 'oom_memory_summary',
+        'source': 'oom_kill.log:3',
+        'summary': 'Kernel memory summary at OOM time',
+      }),
+      dict({
+        'data': dict({
+          'total_swap': '0',
+        }),
+        'excerpt': '[ 1823.442388] Total swap = 0kB',
+        'id': 'f3',
+        'kind': 'oom_memory_summary',
+        'source': 'oom_kill.log:5',
+        'summary': 'Kernel memory summary at OOM time',
+      }),
+      dict({
+        'data': dict({
+          'pages': '2035712',
+        }),
+        'excerpt': '[ 1823.442401] 2035712 pages RAM',
+        'id': 'f4',
+        'kind': 'oom_memory_summary',
+        'source': 'oom_kill.log:6',
+        'summary': 'Kernel memory summary at OOM time',
+      }),
+      dict({
+        'data': dict({
+          'pid': '1547',
+          'process': 'python3',
+        }),
+        'excerpt': '[ 1823.442601] oom-killer: Out of memory: Killed process 1547 (python3) total-vm:8417328kB, anon-rss:7675604kB, file-rss:2304kB, shmem-rss:0kB, UID:1000 pgtables:15352kB oom_score_adj:0',
+        'id': 'f5',
+        'kind': 'oom_kill',
+        'source': 'oom_kill.log:9',
+        'summary': "Kernel OOM-killed process 'python3' (pid 1547)",
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[throttle_active.log]
+  dict({
+    'artifact_path': 'throttle_active.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'healthy': False,
+          'hex': '0x50005',
+          'live': list([
+            'undervoltage',
+            'throttled',
+          ]),
+          'raw': 327685,
+          'sticky': list([
+            'undervoltage_occurred',
+            'throttled_occurred',
+          ]),
+          'unknown_bits': list([
+          ]),
+        }),
+        'excerpt': 'throttled=0x50005',
+        'id': 'f1',
+        'kind': 'throttled_bitfield',
+        'source': 'throttle_active.log:2',
+        'summary': 'vcgencmd get_throttled = 0x50005',
+      }),
+      dict({
+        'data': dict({
+          'condition_keys': list([
+            'undervoltage',
+            'throttled',
+          ]),
+          'conditions': 'undervoltage detected, currently throttled',
+          'count': 2,
+          'hex': '0x50005',
+        }),
+        'excerpt': 'throttled=0x50005',
+        'id': 'f2',
+        'kind': 'throttle_active',
+        'source': 'throttle_active.log:2',
+        'summary': 'Live: undervoltage detected, currently throttled',
+      }),
+      dict({
+        'data': dict({
+          'condition_keys': list([
+            'undervoltage_occurred',
+            'throttled_occurred',
+          ]),
+          'conditions': 'undervoltage has occurred, throttling has occurred',
+          'count': 2,
+          'hex': '0x50005',
+        }),
+        'excerpt': 'throttled=0x50005',
+        'id': 'f3',
+        'kind': 'throttle_occurred',
+        'source': 'throttle_active.log:2',
+        'summary': 'Previously: undervoltage has occurred, throttling has occurred',
+      }),
+      dict({
+        'data': dict({
+          'celsius': 84.2,
+        }),
+        'excerpt': "temp=84.2'C",
+        'id': 'f4',
+        'kind': 'soc_temperature',
+        'source': 'throttle_active.log:4',
+        'summary': 'SoC temperature 84.2°C',
+      }),
+      dict({
+        'data': dict({
+          'clock_id': '0',
+          'hertz': 1000000000,
+          'mhz': 1000,
+        }),
+        'excerpt': 'frequency(0)=1000000000',
+        'id': 'f5',
+        'kind': 'arm_clock',
+        'source': 'throttle_active.log:6',
+        'summary': 'Arm clock 1000 MHz',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[throttle_clear.log]
+  dict({
+    'artifact_path': 'throttle_clear.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'healthy': True,
+          'hex': '0x0',
+          'live': list([
+          ]),
+          'raw': 0,
+          'sticky': list([
+          ]),
+          'unknown_bits': list([
+          ]),
+        }),
+        'excerpt': 'throttled=0x0',
+        'id': 'f1',
+        'kind': 'throttled_bitfield',
+        'source': 'throttle_clear.log:2',
+        'summary': 'vcgencmd get_throttled = 0x0',
+      }),
+      dict({
+        'data': dict({
+          'hex': '0x0',
+        }),
+        'excerpt': 'throttled=0x0',
+        'id': 'f2',
+        'kind': 'throttle_clear',
+        'source': 'throttle_clear.log:2',
+        'summary': 'No throttling or undervoltage, now or earlier',
+      }),
+      dict({
+        'data': dict({
+          'celsius': 47.8,
+        }),
+        'excerpt': "temp=47.8'C",
+        'id': 'f3',
+        'kind': 'soc_temperature',
+        'source': 'throttle_clear.log:4',
+        'summary': 'SoC temperature 47.8°C',
+      }),
+      dict({
+        'data': dict({
+          'clock_id': '0',
+          'hertz': 2400000000,
+          'mhz': 2400,
+        }),
+        'excerpt': 'frequency(0)=2400000000',
+        'id': 'f4',
+        'kind': 'arm_clock',
+        'source': 'throttle_clear.log:6',
+        'summary': 'Arm clock 2400 MHz',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[throttle_occurred.log]
+  dict({
+    'artifact_path': 'throttle_occurred.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'healthy': False,
+          'hex': '0x50000',
+          'live': list([
+          ]),
+          'raw': 327680,
+          'sticky': list([
+            'undervoltage_occurred',
+            'throttled_occurred',
+          ]),
+          'unknown_bits': list([
+          ]),
+        }),
+        'excerpt': 'throttled=0x50000',
+        'id': 'f1',
+        'kind': 'throttled_bitfield',
+        'source': 'throttle_occurred.log:2',
+        'summary': 'vcgencmd get_throttled = 0x50000',
+      }),
+      dict({
+        'data': dict({
+          'condition_keys': list([
+            'undervoltage_occurred',
+            'throttled_occurred',
+          ]),
+          'conditions': 'undervoltage has occurred, throttling has occurred',
+          'count': 2,
+          'hex': '0x50000',
+        }),
+        'excerpt': 'throttled=0x50000',
+        'id': 'f2',
+        'kind': 'throttle_occurred',
+        'source': 'throttle_occurred.log:2',
+        'summary': 'Previously: undervoltage has occurred, throttling has occurred',
+      }),
+      dict({
+        'data': dict({
+          'celsius': 52.1,
+        }),
+        'excerpt': "temp=52.1'C",
+        'id': 'f3',
+        'kind': 'soc_temperature',
+        'source': 'throttle_occurred.log:4',
+        'summary': 'SoC temperature 52.1°C',
+      }),
+      dict({
+        'data': dict({
+          'clock_id': '0',
+          'hertz': 2400000000,
+          'mhz': 2400,
+        }),
+        'excerpt': 'frequency(0)=2400000000',
+        'id': 'f4',
+        'kind': 'arm_clock',
+        'source': 'throttle_occurred.log:6',
+        'summary': 'Arm clock 2400 MHz',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[throttle_unknown_bit.log]
+  dict({
+    'artifact_path': 'throttle_unknown_bit.log',
+    'backend': 'raspberrypi',
+    'facts': list([
+      dict({
+        'data': dict({
+          'healthy': False,
+          'hex': '0x100',
+          'live': list([
+          ]),
+          'raw': 256,
+          'sticky': list([
+          ]),
+          'unknown_bits': list([
+            8,
+          ]),
+        }),
+        'excerpt': 'throttled=0x100',
+        'id': 'f1',
+        'kind': 'throttled_bitfield',
+        'source': 'throttle_unknown_bit.log:2',
+        'summary': 'vcgencmd get_throttled = 0x100',
+      }),
+      dict({
+        'data': dict({
+          'bit_numbers': list([
+            8,
+          ]),
+          'bits': '8',
+          'hex': '0x100',
+        }),
+        'excerpt': 'throttled=0x100',
+        'id': 'f2',
+        'kind': 'throttle_unknown_bits',
+        'source': 'throttle_unknown_bit.log:2',
+        'summary': 'Undocumented bit(s) set: 8',
+      }),
+    ]),
+  })
+# ---

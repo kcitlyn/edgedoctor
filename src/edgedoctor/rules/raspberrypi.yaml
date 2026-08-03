@@ -1,0 +1,184 @@
+# Raspberry Pi host-health rules — benchmark validity and OOM.
+#
+# Same anatomy as the other rule files (see tensorrt.yaml for the field
+# reference, plus `absent`, `optional`, `conditions`).
+#
+# ED04xx = host health / measurement validity.
+#
+# WHAT MAKES THIS FAMILY DIFFERENT
+# Every other rule family explains a model's behaviour. These rules can
+# INVALIDATE a measurement: if the machine was throttling, a latency number is a
+# property of the power supply, not of the model. So ED0401 is an error even
+# though nothing crashed — a confidently-reported wrong benchmark does more
+# damage than a crash, because it gets published and acted on.
+#
+# THE CENTRAL DISTINCTION OF THIS FILE
+# Bits 0-3 are LIVE, bits 16-19 are STICKY ("has occurred"). Same four
+# conditions, different consequences:
+#   live   -> the number you are taking RIGHT NOW is suspect  (error)
+#   sticky -> the machine is fine now, but earlier numbers may not be (warning)
+# Conflating them either cries wolf on a healthy machine or lets a corrupted
+# benchmark through. Hence two separate fact kinds and two severities.
+
+# ── ED0401: throttling happening NOW — measurements are invalid ───────────
+- id: ED0401
+  severity: error
+  requires: [throttle_active]
+  # `throttled_bitfield` is deliberately NOT cited: it is the same log line the
+  # required fact already points at, so listing it would print that line twice.
+  optional: [soc_temperature, arm_clock]
+  message: "the Pi is throttling right now ({conditions}) — timing measurements taken now are not valid"
+  cause: >
+    The SoC is currently reducing its clock or has flagged a power problem, so the
+    CPU is not running at the speed your benchmark assumes. Any latency or
+    throughput number collected in this state describes the machine's thermal and
+    electrical condition, not your model. The two usual causes are an
+    underpowered or cable-limited USB-C supply (undervoltage), and sustained load
+    without adequate cooling (thermal). A Pi 5 in particular draws enough under
+    load that a supply which works fine at idle can sag under inference.
+  suggestions:
+    - summary: "Fix the cause, then re-run the benchmark — do not report the current numbers"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Check whether it is power or heat: undervoltage points at the supply, throttling at cooling"
+      command: "vcgencmd get_throttled && vcgencmd measure_temp"
+      applicability: machine-applicable
+    - summary: "Use the official 27W USB-C PD supply for a Pi 5; many third-party chargers and cables cannot sustain the current"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Add active cooling before sustained inference, and let the SoC settle between runs"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://www.raspberrypi.com/documentation/computers/os.html"
+    - "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html"
+
+# ── ED0402: it throttled EARLIER — earlier numbers are suspect ────────────
+# A warning, not an error: the machine is healthy now, so a measurement taken
+# now is fine. The problem is that you cannot tell which earlier ones weren't.
+- id: ED0402
+  severity: warning
+  requires: [throttle_occurred]
+  absent: [throttle_active]
+  optional: [soc_temperature]
+  message: "the Pi throttled earlier in this session ({conditions}) — measurements from before now may be invalid"
+  cause: >
+    These are the sticky "has occurred" bits: the condition is not happening now,
+    but it did happen at some point. The machine is currently fine, so a fresh
+    measurement is trustworthy — however any number already collected in this
+    session may have been taken while throttled, and the bitfield cannot tell you
+    which. Note the flags persist until cleared (a reboot clears them), so they
+    may also refer to something that happened well before this run.
+  suggestions:
+    - summary: "Reboot to clear the flags, then re-run the benchmark and check the bits again afterwards"
+      command: "sudo reboot"
+      applicability: maybe-incorrect
+    - summary: "Sample get_throttled before AND after each timing run, so a mid-run event is attributable"
+      command: "vcgencmd get_throttled"
+      applicability: machine-applicable
+  refs:
+    - "https://www.raspberrypi.com/documentation/computers/os.html"
+
+# ── ED0403: kernel OOM killer — why the process vanished ──────────────────
+# The signature failure of running a too-large model on a 4-8GB board: no Python
+# traceback, no error message, just a dead process.
+- id: ED0403
+  severity: error
+  requires: [oom_kill]
+  optional: [oom_invoked, oom_memory_summary]
+  message: "the kernel killed process '{process}' to reclaim memory — the model did not fit in RAM"
+  cause: >
+    This was not a Python exception; the kernel's OOM killer terminated the
+    process, which is why there is no traceback and often no output at all. The
+    process simply disappears, and the evidence is only in the kernel log. On a
+    Pi this usually means the model's weights plus its activation arena exceeded
+    available RAM — and note that peak usage during session initialization is
+    typically well above the model file's size on disk.
+  suggestions:
+    - summary: "Quantize the model to shrink weights — often a 4x reduction from FP32"
+      command: "python -m onnxruntime.quantization.preprocess --input model.onnx --output prep.onnx"
+      applicability: maybe-incorrect
+    - summary: "Cap the arena so the allocator fails cleanly with an exception instead of the process being killed"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Watch peak memory during session creation, not just steady-state inference"
+      command: "/usr/bin/time -v python your_script.py"
+      applicability: machine-applicable
+    - summary: "Check whether swap is enabled — on an SD card it prevents the kill but may make inference unusably slow"
+      command: "free -h && swapon --show"
+      applicability: machine-applicable
+  refs:
+    - "https://www.kernel.org/doc/gorman/html/understand/understand016.html"
+
+# ── ED0404: allocation failed but the process survived ────────────────────
+# Distinct from ED0403: here the allocator refused and raised, so there IS a
+# traceback and the fix is about arena configuration rather than total RAM.
+- id: ED0404
+  severity: error
+  requires: [allocation_failed]
+  absent: [oom_kill]
+  optional: [oom_memory_summary]
+  message: "a memory allocation failed — the runtime could not reserve the buffer it needed"
+  cause: >
+    The allocator refused a request and the runtime raised rather than being
+    killed, so unlike a kernel OOM there is a traceback to work from. This is
+    usually a single oversized buffer — a large intermediate activation, or an
+    arena sized for a bigger machine — rather than the model as a whole being too
+    large. Memory fragmentation can also cause it: a request can fail even when
+    the total free figure looks sufficient.
+  suggestions:
+    - summary: "Reduce batch size or input resolution — activation memory scales with both"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Compare the requested size in the evidence against actual free memory"
+      command: "free -h"
+      applicability: machine-applicable
+    - summary: "Disable the CPU memory arena to trade some speed for a lower peak"
+      command: ""
+      applicability: maybe-incorrect
+  refs:
+    - "https://onnxruntime.ai/docs/performance/tune-performance/memory.html"
+
+# ── ED0405: undocumented bits set — say so rather than guess ──────────────
+# Bits 4-15 have no published meaning. Reporting them honestly is better than
+# either ignoring them or inventing an interpretation.
+- id: ED0405
+  severity: warning
+  requires: [throttle_unknown_bits]
+  message: "get_throttled reported undocumented bit(s) {bits} — meaning unknown"
+  cause: >
+    Raspberry Pi documents bits 0-3 and 16-19; the value in this log has other
+    bits set. edgedoctor does not know what they mean and will not guess, because
+    a fabricated interpretation of a hardware status flag is worse than an
+    admitted gap. It may indicate a newer firmware reporting states that post-date
+    the documentation.
+  suggestions:
+    - summary: "Check the current Raspberry Pi documentation — the bit may be newly documented"
+      command: ""
+      applicability: maybe-incorrect
+    - summary: "Record the firmware version alongside the reading, so the value is attributable"
+      command: "vcgencmd version"
+      applicability: machine-applicable
+  refs:
+    - "https://www.raspberrypi.com/documentation/computers/os.html"
+
+# ── ED0406: host is healthy (informational) ───────────────────────────────
+# The negative control, and a genuinely useful statement: it is what licenses
+# you to trust a benchmark taken on this host.
+- id: ED0406
+  severity: info
+  requires: [throttle_clear]
+  absent: [throttle_active, throttle_occurred, throttle_unknown_bits, oom_kill]
+  optional: [soc_temperature, arm_clock]
+  message: "no throttling or undervoltage, now or earlier — timing measurements from this host are trustworthy"
+  cause: >
+    All documented throttle and undervoltage bits are clear, including the sticky
+    "has occurred" flags, so nothing has degraded the clock at any point since the
+    flags were last reset. This is the state a performance measurement needs in
+    order to mean anything.
+  suggestions:
+    - summary: "Re-check after a sustained run — thermal throttling appears under load, not at idle"
+      command: "vcgencmd get_throttled"
+      applicability: machine-applicable
+  refs:
+    - "https://www.raspberrypi.com/documentation/computers/os.html"

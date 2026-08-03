@@ -1,0 +1,9 @@
+[ 1823.442156] python3 invoked oom-killer: gfp_mask=0x140dca(GFP_HIGHUSER_MOVABLE|__GFP_COMP|__GFP_ZERO), order=0, oom_score_adj=0
+[ 1823.442201] CPU: 2 PID: 1547 Comm: python3 Tainted: G         C        6.6.31+rpt-rpi-2712 #1
+[ 1823.442312] Mem-Info:
+[ 1823.442340] active_anon:1918442 inactive_anon:6721 isolated_anon:0
+[ 1823.442388] Total swap = 0kB
+[ 1823.442401] 2035712 pages RAM
+[ 1823.442455] Tasks state (memory values in pages):
+[ 1823.442512] [   1547]  1000  1547  2104332  1918901 15720448        0             0 python3
+[ 1823.442601] oom-killer: Out of memory: Killed process 1547 (python3) total-vm:8417328kB, anon-rss:7675604kB, file-rss:2304kB, shmem-rss:0kB, UID:1000 pgtables:15352kB oom_score_adj:0

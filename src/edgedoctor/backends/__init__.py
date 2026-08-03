@@ -21,6 +21,8 @@ PARSER_REGISTRY: dict[str, str] = {
     "tensorrt": "tensorrt:TensorRTBackend",
     "polygraphy": "polygraphy:PolygraphyBackend",
     "onnxruntime": "onnxruntime:OnnxRuntimeBackend",
+    "raspberrypi": "raspberrypi:RaspberryPiBackend",
+    "ort_profile": "ort_profile:OrtProfileBackend",
 }
 
 
