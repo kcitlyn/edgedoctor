@@ -205,7 +205,14 @@ class TestParserProperties:
         # The module is named onnxruntime.py, same as the pip package. Relative
         # imports keep them separate, but a regression here would be subtle and
         # would break the corpus generator rather than the parser.
-        import onnxruntime as real_ort
+        #
+        # Skipped when the real package is absent (it lives in the [corpus]
+        # extra, which CI doesn't install): with nothing to shadow, the test has
+        # nothing to prove. It still guards the machines that regenerate the
+        # corpus, which is exactly where the bug would bite.
+        real_ort = pytest.importorskip(
+            "onnxruntime", reason="shadowing can only be checked when ORT is installed"
+        )
 
         from edgedoctor.backends.onnxruntime import OnnxRuntimeBackend as Ours
 
