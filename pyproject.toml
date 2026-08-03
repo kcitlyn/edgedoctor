@@ -43,7 +43,9 @@ dependencies = [
 [project.optional-dependencies]
 # The LLM layer is an extra so the core tool installs light and works with no
 # API key (rules-only mode). `pip install "edgedoctor[llm]"` to enable synthesis.
-llm = ["anthropic>=0.40"]
+llm = [
+    "anthropic>=0.40",
+]
 
 # Tools needed only to REGENERATE the accuracy-divergence corpus
 # (scripts/make_divergence_corpus.py), not to run edgedoctor or its tests — the
