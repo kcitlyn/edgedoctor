@@ -1,0 +1,400 @@
+# serializer version: 1
+# name: test_snapshot[fp32_baseline_run.log]
+  dict({
+    'artifact_path': 'fp32_baseline_run.log',
+    'backend': 'polygraphy',
+    'facts': list([
+      dict({
+        'data': dict({
+          'runtime': '1.578s',
+          'verdict': 'PASSED',
+        }),
+        'excerpt': '[I] PASSED | Runtime: 1.578s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --save-inputs artifacts/_divergence_work/inputs.json --save-outputs artifacts/_divergence_work/fp32_outputs.json',
+        'id': 'f1',
+        'kind': 'run_verdict',
+        'source': 'fp32_baseline_run.log:15',
+        'summary': 'polygraphy run verdict: PASSED (runtime 1.578s)',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[int8_vs_fp32_fail.log]
+  dict({
+    'artifact_path': 'int8_vs_fp32_fail.log',
+    'backend': 'polygraphy',
+    'facts': list([
+      dict({
+        'data': dict({
+          'dtype': 'float32',
+          'output': 'output',
+          'shape': '1, 1000',
+        }),
+        'excerpt': "[I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(1, 1000))",
+        'id': 'f1',
+        'kind': 'compared_output',
+        'source': 'int8_vs_fp32_fail.log:15',
+        'summary': "Compared output 'output' (dtype=float32, shape=(1, 1000))",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'stat': 'elemwise',
+          'used_abs': '1e-05',
+          'used_rel': '1e-05',
+        }),
+        'excerpt': '[I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error',
+        'id': 'f2',
+        'kind': 'tolerance_setting',
+        'source': 'int8_vs_fp32_fail.log:16',
+        'summary': 'Comparison used abs=1e-05, rel=1e-05 on elemwise error',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'req_abs': '0.59903',
+          'req_rel': '140.83',
+          'stat': 'elemwise',
+        }),
+        'excerpt': '[I]             Minimum Required Tolerance: elemwise error | [abs=0.59903] OR [rel=140.83] (requirements may be lower if both abs/rel tolerances are set)',
+        'id': 'f3',
+        'kind': 'required_tolerance',
+        'source': 'int8_vs_fp32_fail.log:44',
+        'summary': 'Would have passed at abs=0.59903 OR rel=140.83 (elemwise error)',
+      }),
+      dict({
+        'data': dict({
+          'atol': '1e-05',
+          'output': 'output',
+          'rtol': '1e-05',
+        }),
+        'excerpt': "[E]         FAILED | Output: 'output' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)",
+        'id': 'f4',
+        'kind': 'output_mismatch',
+        'source': 'int8_vs_fp32_fail.log:71',
+        'summary': "Output 'output' diverged beyond tolerance (rel=1e-05, abs=1e-05)",
+      }),
+      dict({
+        'data': dict({
+          'count': 1,
+          'first_output': 'output',
+          'output': 'output',
+          'outputs': list([
+            'output',
+          ]),
+        }),
+        'excerpt': "[E]     FAILED | Mismatched outputs: ['output']",
+        'id': 'f5',
+        'kind': 'mismatched_outputs',
+        'source': 'int8_vs_fp32_fail.log:72',
+        'summary': '1 output(s) failed comparison',
+      }),
+      dict({
+        'data': dict({
+          'max_absdiff': '0.59903',
+          'max_reldiff': '140.83',
+          'mean_absdiff': '0.10218',
+          'mean_reldiff': '0.48438',
+          'median_absdiff': '0.083508',
+          'median_reldiff': '0.090546',
+          'metrics': 'max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)',
+          'output': 'output',
+        }),
+        'excerpt': '[E] Average Metrics | output: max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)',
+        'id': 'f6',
+        'kind': 'divergence_metrics',
+        'source': 'int8_vs_fp32_fail.log:73',
+        'summary': "Measured divergence for 'output': max_absdiff=0.59903, max_reldiff=140.83",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'passed': '0',
+          'rate': '0.0',
+          'runner0': 'onnxrt-runner-N0-08/03/26-10:20:33',
+          'runner1': 'onnxrt-runner-N0-08/03/26-10:20:30',
+          'total': '1',
+        }),
+        'excerpt': 'Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:33 vs. onnxrt-runner-N0-08/03/26-10:20:30 | Passed: 0/1 iterations | Pass Rate: 0.0%',
+        'id': 'f7',
+        'kind': 'accuracy_summary',
+        'source': 'int8_vs_fp32_fail.log:74',
+        'summary': '0/1 iteration(s) passed (0.0%): onnxrt-runner-N0-08/03/26-10:20:33 vs onnxrt-runner-N0-08/03/26-10:20:30',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'runtime': '1.221s',
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '[E] FAILED | Runtime: 1.221s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json',
+        'id': 'f8',
+        'kind': 'run_verdict',
+        'source': 'int8_vs_fp32_fail.log:75',
+        'summary': 'polygraphy run verdict: FAILED (runtime 1.221s)',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[int8_vs_fp32_pass.log]
+  dict({
+    'artifact_path': 'int8_vs_fp32_pass.log',
+    'backend': 'polygraphy',
+    'facts': list([
+      dict({
+        'data': dict({
+          'dtype': 'float32',
+          'output': 'output',
+          'shape': '1, 1000',
+        }),
+        'excerpt': "[I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(1, 1000))",
+        'id': 'f1',
+        'kind': 'compared_output',
+        'source': 'int8_vs_fp32_pass.log:15',
+        'summary': "Compared output 'output' (dtype=float32, shape=(1, 1000))",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'stat': 'elemwise',
+          'used_abs': '6',
+          'used_rel': '300',
+        }),
+        'excerpt': '[I]         Tolerance: [abs=6, rel=300] | Checking elemwise error',
+        'id': 'f2',
+        'kind': 'tolerance_setting',
+        'source': 'int8_vs_fp32_pass.log:16',
+        'summary': 'Comparison used abs=6, rel=300 on elemwise error',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'req_abs': '0.59903',
+          'req_rel': '140.83',
+          'stat': 'elemwise',
+        }),
+        'excerpt': '[I]             Minimum Required Tolerance: elemwise error | [abs=0.59903] OR [rel=140.83] (requirements may be lower if both abs/rel tolerances are set)',
+        'id': 'f3',
+        'kind': 'required_tolerance',
+        'source': 'int8_vs_fp32_pass.log:20',
+        'summary': 'Would have passed at abs=0.59903 OR rel=140.83 (elemwise error)',
+      }),
+      dict({
+        'data': dict({
+          'atol': '6.0',
+          'output': 'output',
+          'rtol': '300',
+        }),
+        'excerpt': "[I]         PASSED | Output: 'output' | Difference is within tolerance (rel=300, abs=6.0)",
+        'id': 'f4',
+        'kind': 'output_match',
+        'source': 'int8_vs_fp32_pass.log:23',
+        'summary': "Output 'output' matched within tolerance (rel=300, abs=6.0)",
+      }),
+      dict({
+        'data': dict({
+          'count': 1,
+          'first_output': 'output',
+          'output': 'output',
+          'outputs': list([
+            'output',
+          ]),
+        }),
+        'excerpt': "[I]     PASSED | All outputs matched | Outputs: ['output']",
+        'id': 'f5',
+        'kind': 'all_outputs_matched',
+        'source': 'int8_vs_fp32_pass.log:24',
+        'summary': 'All 1 compared output(s) matched',
+      }),
+      dict({
+        'data': dict({
+          'max_absdiff': '0.59903',
+          'max_reldiff': '140.83',
+          'mean_absdiff': '0.10218',
+          'mean_reldiff': '0.48438',
+          'median_absdiff': '0.083508',
+          'median_reldiff': '0.090546',
+          'metrics': 'max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)',
+          'output': 'output',
+        }),
+        'excerpt': '[I] Average Metrics | output: max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)',
+        'id': 'f6',
+        'kind': 'divergence_metrics',
+        'source': 'int8_vs_fp32_pass.log:25',
+        'summary': "Measured divergence for 'output': max_absdiff=0.59903, max_reldiff=140.83",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'passed': '1',
+          'rate': '100.0',
+          'runner0': 'onnxrt-runner-N0-08/03/26-10:20:35',
+          'runner1': 'onnxrt-runner-N0-08/03/26-10:20:30',
+          'total': '1',
+        }),
+        'excerpt': 'Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:35 vs. onnxrt-runner-N0-08/03/26-10:20:30 | Passed: 1/1 iterations | Pass Rate: 100.0%',
+        'id': 'f7',
+        'kind': 'accuracy_summary',
+        'source': 'int8_vs_fp32_pass.log:26',
+        'summary': '1/1 iteration(s) passed (100.0%): onnxrt-runner-N0-08/03/26-10:20:35 vs onnxrt-runner-N0-08/03/26-10:20:30',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'runtime': '1.120s',
+          'verdict': 'PASSED',
+        }),
+        'excerpt': '[I] PASSED | Runtime: 1.120s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json --atol 6.0 --rtol 300',
+        'id': 'f8',
+        'kind': 'run_verdict',
+        'source': 'int8_vs_fp32_pass.log:27',
+        'summary': 'polygraphy run verdict: PASSED (runtime 1.120s)',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[nan_output.log]
+  dict({
+    'artifact_path': 'nan_output.log',
+    'backend': 'polygraphy',
+    'facts': list([
+      dict({
+        'data': dict({
+          'detail': 'One or more NaNs were encountered in this output',
+        }),
+        'excerpt': '[E]         NaN Detected | One or more NaNs were encountered in this output',
+        'id': 'f1',
+        'kind': 'nan_detected',
+        'source': 'nan_output.log:16',
+        'summary': 'NaN values present in an output tensor',
+      }),
+      dict({
+        'data': dict({
+          'detail': 'One or more non-finite values were encountered in this output',
+        }),
+        'excerpt': '[E]         Inf Detected | One or more non-finite values were encountered in this output',
+        'id': 'f2',
+        'kind': 'inf_detected',
+        'source': 'nan_output.log:18',
+        'summary': 'Non-finite (inf) values present in an output tensor',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+        }),
+        'excerpt': '[E]         FAILED | Errors detected in output: output',
+        'id': 'f3',
+        'kind': 'validation_failed',
+        'source': 'nan_output.log:20',
+        'summary': "Output 'output' failed validation (NaN/Inf check)",
+      }),
+      dict({
+        'data': dict({
+          'runtime': '1.215s',
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '[E] FAILED | Runtime: 1.215s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/nan_model.onnx --onnxrt --validate --input-shapes input:[1,4]',
+        'id': 'f4',
+        'kind': 'run_verdict',
+        'source': 'nan_output.log:22',
+        'summary': 'polygraphy run verdict: FAILED (runtime 1.215s)',
+      }),
+    ]),
+  })
+# ---
+# name: test_snapshot[shape_mismatch.log]
+  dict({
+    'artifact_path': 'shape_mismatch.log',
+    'backend': 'polygraphy',
+    'facts': list([
+      dict({
+        'data': dict({
+          'dtype': 'float32',
+          'output': 'output',
+          'shape': '1, 1000',
+        }),
+        'excerpt': "[I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(2, 1000))",
+        'id': 'f1',
+        'kind': 'compared_output',
+        'source': 'shape_mismatch.log:15',
+        'summary': "Compared output 'output' (dtype=float32, shape=(1, 1000))",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'stat': 'elemwise',
+          'used_abs': '1e-05',
+          'used_rel': '1e-05',
+        }),
+        'excerpt': '[I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error',
+        'id': 'f2',
+        'kind': 'tolerance_setting',
+        'source': 'shape_mismatch.log:16',
+        'summary': 'Comparison used abs=1e-05, rel=1e-05 on elemwise error',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+        }),
+        'excerpt': '[E]         FAILED | Output: `output` | Will not compare outputs of different shapes.',
+        'id': 'f3',
+        'kind': 'shape_mismatch',
+        'source': 'shape_mismatch.log:17',
+        'summary': "Output 'output' not compared: the two runners' shapes differ",
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'shape0': '1, 1000',
+          'shape1': '2, 1000',
+        }),
+        'excerpt': 'Note: Output shapes are (1, 1000) and (2, 1000).',
+        'id': 'f4',
+        'kind': 'shape_detail',
+        'source': 'shape_mismatch.log:18',
+        'summary': 'Compared shapes were (1, 1000) and (2, 1000)',
+      }),
+      dict({
+        'data': dict({
+          'count': 1,
+          'first_output': 'output',
+          'output': 'output',
+          'outputs': list([
+            'output',
+          ]),
+        }),
+        'excerpt': "[E]     FAILED | Mismatched outputs: ['output']",
+        'id': 'f5',
+        'kind': 'mismatched_outputs',
+        'source': 'shape_mismatch.log:20',
+        'summary': '1 output(s) failed comparison',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'passed': '0',
+          'rate': '0.0',
+          'runner0': 'onnxrt-runner-N0-08/03/26-10:20:43',
+          'runner1': 'onnxrt-runner-N0-08/03/26-10:20:41',
+          'total': '1',
+        }),
+        'excerpt': '[E] Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:43 vs. onnxrt-runner-N0-08/03/26-10:20:41 | Passed: 0/1 iterations | Pass Rate: 0.0%',
+        'id': 'f6',
+        'kind': 'accuracy_summary',
+        'source': 'shape_mismatch.log:21',
+        'summary': '0/1 iteration(s) passed (0.0%): onnxrt-runner-N0-08/03/26-10:20:43 vs onnxrt-runner-N0-08/03/26-10:20:41',
+      }),
+      dict({
+        'data': dict({
+          'output': 'output',
+          'runtime': '1.381s',
+          'verdict': 'FAILED',
+        }),
+        'excerpt': '[E] FAILED | Runtime: 1.381s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --load-outputs artifacts/_divergence_work/batch2_outputs.json',
+        'id': 'f7',
+        'kind': 'run_verdict',
+        'source': 'shape_mismatch.log:22',
+        'summary': 'polygraphy run verdict: FAILED (runtime 1.381s)',
+      }),
+    ]),
+  })
+# ---

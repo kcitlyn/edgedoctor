@@ -8,7 +8,9 @@ built and tested against, and (later) the seed of the reference benchmark.
 ```
 corpus/
   tensorrt/          trtexec / Polygraphy logs from the ThinkPad (RTX 500 Ada)
-  onnxruntime/       ORT verbose logs + profiling JSON (Mac, later Pi 5)
+  onnxruntime/       Polygraphy accuracy-divergence logs (ORT runner, CPU),
+                     generated on the Mac by scripts/make_divergence_corpus.py;
+                     later, ORT verbose logs + profiling JSON from the Pi 5
   <backend>/         one directory per backend as they come online
 ```
 
@@ -16,6 +18,11 @@ corpus/
 
 1. **Real artifacts only.** Every file here was produced by an actual run of a
    vendor tool. Synthetic test inputs live in `tests/fixtures/`, never here.
+   *Reproducibly generated* is still real: the `onnxruntime/` logs are genuine
+   Polygraphy output from a real `polygraphy run`, driven by a committed script
+   (`scripts/make_divergence_corpus.py`) so the exact bytes can be regenerated.
+   The distinction that matters is the tool, not who typed the command — a
+   hand-forged log that no tool ever emitted would belong in `tests/fixtures/`.
 2. **One `.meta.md` sidecar per artifact** recording ground truth:
    what command produced it, on what hardware/versions, what actually went
    wrong (the human-verified root cause), and what fixed it. The sidecar is the

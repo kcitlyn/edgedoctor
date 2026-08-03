@@ -30,7 +30,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
-# Kept deliberately small (3 deps). typer vendors click and brings rich for
+# Kept deliberately small (3 runtime deps). typer vendors click and brings rich for
 # terminal formatting; pydantic v2 gives us validated data contracts + JSON
 # Schema for free (the same schema later feeds the LLM's structured output);
 # pyyaml reads the rule knowledge base.
@@ -44,6 +44,19 @@ dependencies = [
 # The LLM layer is an extra so the core tool installs light and works with no
 # API key (rules-only mode). `pip install "edgedoctor[llm]"` to enable synthesis.
 llm = ["anthropic>=0.40"]
+
+# Tools needed only to REGENERATE the accuracy-divergence corpus
+# (scripts/make_divergence_corpus.py), not to run edgedoctor or its tests — the
+# generated logs are committed, so the test suite needs none of this. Kept out
+# of the default dev group so CI (and a normal contributor checkout) stays light
+# and GPU-free. `pip install "edgedoctor[corpus]"` to rebuild the corpus.
+corpus = [
+    "polygraphy>=0.49",
+    "onnx>=1.16",
+    "onnxruntime>=1.18",
+    "torch>=2.2",
+    "torchvision>=0.17",
+]
 
 [dependency-groups]
 # Dev tooling (uv installs these by default with `uv sync`).

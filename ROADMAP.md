@@ -38,8 +38,9 @@ along and runs it.
 - [x] Rule knowledge base → root cause + fix, fully offline (ED0xxx codes).
 - [x] CLI report (rustc-style evidence/note/help) + `--json` for agents.
 - [ ] Validate parser + rules against real ThinkPad logs (corpus).
-- [ ] Parser + rules for failure class **(B)** accuracy divergence
-      (Polygraphy comparison output, layer-wise SQNR).
+- [x] Parser + rules for failure class **(B)** accuracy divergence
+      (Polygraphy comparison output, layer-wise first-diverging tensor,
+      NaN/Inf validation — verified against a real generated corpus).
 - [ ] Optional grounded LLM synthesis layer (facts-only, cites fact ids,
       degrades to rules-only on any failure).
 - **Done =** a 30-second demo: broken model in → cryptic log → 3 plain-English
