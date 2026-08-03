@@ -1,17 +1,17 @@
 [W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
-[I] RUNNING | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/nan_model.onnx --onnxrt --validate --input-shapes input:[1,4]
+[I] RUNNING | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/nan_model.onnx --onnxrt --validate --input-shapes input:[1,4]
 [I] Will generate inference input data according to provided TensorMetadata: {input [shape=(1, 4)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:45  | Activating and starting inference
+[I] onnxrt-runner-N0-08/03/26-14:00:05  | Activating and starting inference
 [I] Creating ONNX-Runtime Inference Session with providers: ['CPUExecutionProvider']
-[I] onnxrt-runner-N0-08/03/26-10:20:45 
+[I] onnxrt-runner-N0-08/03/26-14:00:05 
     ---- Inference Input(s) ----
     {input [dtype=float32, shape=(1, 4)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:45 
+[I] onnxrt-runner-N0-08/03/26-14:00:05 
     ---- Inference Output(s) ----
     {output [dtype=float32, shape=(1, 4)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:45  | Completed 1 iteration(s) in 0.2401 ms | Average inference time: 0.2401 ms.
-[I] Output Validation | Runners: ['onnxrt-runner-N0-08/03/26-10:20:45']
-[I]     onnxrt-runner-N0-08/03/26-10:20:45  | Validating output: output (check_inf=True, check_nan=True)
+[I] onnxrt-runner-N0-08/03/26-14:00:05  | Completed 1 iteration(s) in 0.4728 ms | Average inference time: 0.4728 ms.
+[I] Output Validation | Runners: ['onnxrt-runner-N0-08/03/26-14:00:05']
+[I]     onnxrt-runner-N0-08/03/26-14:00:05  | Validating output: output (check_inf=True, check_nan=True)
 [I]         mean=nan, std-dev=nan, var=nan, median=nan, min=nan at (0, 0), max=nan at (0, 0), avg-magnitude=nan, p90=nan, p95=nan, p99=nan
 [E]         NaN Detected | One or more NaNs were encountered in this output
 [I]         Note: Use -vv or set logging verbosity to EXTRA_VERBOSE to display locations of NaNs
@@ -19,4 +19,4 @@
 [I]         Note: Use -vv or set logging verbosity to EXTRA_VERBOSE to display non-finite values
 [E]         FAILED | Errors detected in output: output
 [E]     FAILED | Output Validation
-[E] FAILED | Runtime: 1.215s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/nan_model.onnx --onnxrt --validate --input-shapes input:[1,4]
+[E] FAILED | Runtime: 1.266s | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/nan_model.onnx --onnxrt --validate --input-shapes input:[1,4]

@@ -48,6 +48,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _corpus_paths import scrub_log  # noqa: E402
+
 # Fixed input shape for the image classifiers we export. Batch is 1 so the
 # shape-mismatch case can use batch 2 as the deliberately-wrong comparison.
 _SHAPE = "input:[1,3,224,224]"
@@ -64,7 +67,12 @@ def _run(cmd: list[str], log_path: Path | None = None) -> int:
         return subprocess.run(cmd, capture_output=True, text=True).returncode
     with log_path.open("w") as fh:
         proc = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, text=True)
-    print(f"    -> {log_path}  (exit {proc.returncode})")
+    # Mask this machine's absolute paths. Done at capture time so committed logs
+    # are portable by construction; preserves line numbers, which edgedoctor
+    # cites. See scripts/_corpus_paths.py.
+    changed = scrub_log(log_path)
+    print(f"    -> {log_path}  (exit {proc.returncode}"
+          f"{f', {changed} line(s) path-normalized' if changed else ''})")
     return proc.returncode
 
 

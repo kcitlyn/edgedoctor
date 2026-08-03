@@ -1,14 +1,14 @@
 [W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
 [W] 'mark all' is deprecated and will be removed in Polygraphy 0.55.0. Use '*' instead.
-[I] RUNNING | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --onnx-outputs mark all --load-inputs artifacts/_divergence_work/layerwise_inputs.json --load-outputs artifacts/_divergence_work/layerwise_fp32_outputs.json
+[I] RUNNING | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --onnx-outputs mark all --load-inputs artifacts/_divergence_work/layerwise_inputs.json --load-outputs artifacts/_divergence_work/layerwise_fp32_outputs.json
 [I] Loading input data from artifacts/_divergence_work/layerwise_inputs.json
-[I] onnxrt-runner-N0-08/03/26-10:20:39  | Activating and starting inference
-[I] Loading model: /Users/chenkait/personal/edgedoctor/artifacts/_divergence_work/resnet18_int8.onnx
+[I] onnxrt-runner-N0-08/03/26-13:59:59  | Activating and starting inference
+[I] Loading model: <REPO>/artifacts/_divergence_work/resnet18_int8.onnx
 [I] Creating ONNX-Runtime Inference Session with providers: ['CPUExecutionProvider']
-[I] onnxrt-runner-N0-08/03/26-10:20:39 
+[I] onnxrt-runner-N0-08/03/26-13:59:59 
     ---- Inference Input(s) ----
     {input [dtype=float32, shape=(1, 3, 224, 224)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:39 
+[I] onnxrt-runner-N0-08/03/26-13:59:59 
     ---- Inference Output(s) ----
     {input_quantized [dtype=uint8, shape=(1, 3, 224, 224)],
      input_scale [dtype=float32, shape=()],
@@ -217,12 +217,12 @@
      output_MatMul_output_quantized_cast_output [dtype=float32, shape=(1, 1000)],
      output_MatMul [dtype=float32, shape=(1, 1000)],
      output [dtype=float32, shape=(1, 1000)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:39  | Completed 1 iteration(s) in 31.17 ms | Average inference time: 31.17 ms.
+[I] onnxrt-runner-N0-08/03/26-13:59:59  | Completed 1 iteration(s) in 33.34 ms | Average inference time: 33.34 ms.
 [I] Loading inference results from artifacts/_divergence_work/layerwise_fp32_outputs.json
-[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-10:20:39 vs. onnxrt-runner-N0-08/03/26-10:20:35
+[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-13:59:59 vs. onnxrt-runner-N0-08/03/26-13:59:55
 [I]     Comparing Output: '/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 112, 112)) with '/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 112, 112))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /conv1/Conv_output_0 | Stats: mean=0.17694, std-dev=0.33992, var=0.11555, median=0.23734, min=-1.0387 at (0, 3, 106, 49), max=1.4134 at (0, 24, 17, 57), avg-magnitude=0.31624, p90=0.54273, p95=0.6403, p99=0.71606
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /conv1/Conv_output_0 | Stats: mean=0.17694, std-dev=0.33992, var=0.11555, median=0.23734, min=-1.0387 at (0, 3, 106, 49), max=1.4134 at (0, 24, 17, 57), avg-magnitude=0.31624, p90=0.54273, p95=0.6403, p99=0.71606
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.04  , -0.793 ) |      11634 | #
@@ -235,7 +235,7 @@
                 (0.678  , 0.923  ) |      28427 | ####
                 (0.923  , 1.17   ) |        371 | 
                 (1.17   , 1.41   ) |         14 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /conv1/Conv_output_0 | Stats: mean=0.17684, std-dev=0.33954, var=0.11528, median=0.23743, min=-1.0369 at (0, 3, 106, 49), max=1.4111 at (0, 24, 17, 57), avg-magnitude=0.31578, p90=0.543, p95=0.6378, p99=0.70963
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /conv1/Conv_output_0 | Stats: mean=0.17684, std-dev=0.33954, var=0.11528, median=0.23743, min=-1.0369 at (0, 3, 106, 49), max=1.4111 at (0, 24, 17, 57), avg-magnitude=0.31578, p90=0.543, p95=0.6378, p99=0.70963
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.04  , -0.793 ) |      11713 | #
@@ -279,8 +279,8 @@
 [E]         FAILED | Output: '/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 112, 112)) with '/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 112, 112))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /relu/Relu_output_0 | Stats: mean=0.24659, std-dev=0.21915, var=0.048026, median=0.23734, min=0 at (0, 0, 0, 0), max=1.4134 at (0, 24, 17, 57), avg-magnitude=0.24659, p90=0.54273, p95=0.6403, p99=0.71606
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /relu/Relu_output_0 | Stats: mean=0.24659, std-dev=0.21915, var=0.048026, median=0.23734, min=0 at (0, 0, 0, 0), max=1.4134 at (0, 24, 17, 57), avg-magnitude=0.24659, p90=0.54273, p95=0.6403, p99=0.71606
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.141) |     315442 | ########################################
@@ -293,7 +293,7 @@
                 (0.989, 1.13 ) |        143 | 
                 (1.13 , 1.27 ) |         26 | 
                 (1.27 , 1.41 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /relu/Relu_output_0 | Stats: mean=0.24631, std-dev=0.21863, var=0.047797, median=0.23743, min=0 at (0, 0, 0, 0), max=1.4111 at (0, 24, 17, 57), avg-magnitude=0.24631, p90=0.543, p95=0.6378, p99=0.70963
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /relu/Relu_output_0 | Stats: mean=0.24631, std-dev=0.21863, var=0.047797, median=0.23743, min=0 at (0, 0, 0, 0), max=1.4111 at (0, 24, 17, 57), avg-magnitude=0.24631, p90=0.543, p95=0.6378, p99=0.70963
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.141) |     316017 | ########################################
@@ -337,8 +337,8 @@
 [E]         FAILED | Output: '/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/maxpool/MaxPool_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/maxpool/MaxPool_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /maxpool/MaxPool_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /maxpool/MaxPool_output_0 | Stats: mean=0.35576, std-dev=0.26354, var=0.069454, median=0.41809, min=0 at (0, 2, 0, 0), max=1.4134 at (0, 24, 8, 28), avg-magnitude=0.35576, p90=0.68173, p95=0.72444, p99=0.84751
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /maxpool/MaxPool_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /maxpool/MaxPool_output_0 | Stats: mean=0.35576, std-dev=0.26354, var=0.069454, median=0.41809, min=0 at (0, 2, 0, 0), max=1.4134 at (0, 24, 8, 28), avg-magnitude=0.35576, p90=0.68173, p95=0.72444, p99=0.84751
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.141) |      58374 | ########################################
@@ -351,7 +351,7 @@
                 (0.989, 1.13 ) |        312 | 
                 (1.13 , 1.27 ) |         62 | 
                 (1.27 , 1.41 ) |          8 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /maxpool/MaxPool_output_0 | Stats: mean=0.35543, std-dev=0.263, var=0.06917, median=0.41681, min=0 at (0, 2, 0, 0), max=1.4111 at (0, 24, 8, 28), avg-magnitude=0.35543, p90=0.68039, p95=0.72009, p99=0.84784
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /maxpool/MaxPool_output_0 | Stats: mean=0.35543, std-dev=0.263, var=0.06917, median=0.41681, min=0 at (0, 2, 0, 0), max=1.4111 at (0, 24, 8, 28), avg-magnitude=0.35543, p90=0.68039, p95=0.72009, p99=0.84784
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.141) |      58126 | ########################################
@@ -395,7 +395,7 @@
 [E]         FAILED | Output: '/maxpool/MaxPool_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.0/conv1/Conv_output_0 | Stats: mean=-0.023802, std-dev=0.27373, var=0.074926, median=0.0038297, min=-1.1683 at (0, 26, 55, 28), max=0.80771 at (0, 1, 16, 0), avg-magnitude=0.21822, p90=0.31368, p95=0.38179, p99=0.4601
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.0/conv1/Conv_output_0 | Stats: mean=-0.023802, std-dev=0.27373, var=0.074926, median=0.0038297, min=-1.1683 at (0, 26, 55, 28), max=0.80771 at (0, 1, 16, 0), avg-magnitude=0.21822, p90=0.31368, p95=0.38179, p99=0.4601
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.18 , -0.985) |         79 | 
@@ -408,7 +408,7 @@
                 (0.21  , 0.409 ) |      33274 | ######################
                 (0.409 , 0.609 ) |       6382 | ####
                 (0.609 , 0.808 ) |         84 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.0/conv1/Conv_output_0 | Stats: mean=-0.024432, std-dev=0.27243, var=0.07422, median=0.0076312, min=-1.1839 at (0, 26, 55, 28), max=0.80081 at (0, 1, 16, 0), avg-magnitude=0.21712, p90=0.30838, p95=0.37586, p99=0.45838
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.0/conv1/Conv_output_0 | Stats: mean=-0.024432, std-dev=0.27243, var=0.07422, median=0.0076312, min=-1.1839 at (0, 26, 55, 28), max=0.80081 at (0, 1, 16, 0), avg-magnitude=0.21712, p90=0.30838, p95=0.37586, p99=0.45838
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.18 , -0.985) |         74 | 
@@ -452,8 +452,8 @@
 [E]         FAILED | Output: '/layer1/layer1.0/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.0/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.0/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer1/layer1.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.0/relu/Relu_output_0 | Stats: mean=0.097211, std-dev=0.13167, var=0.017337, median=0.0038297, min=0 at (0, 0, 0, 0), max=0.80771 at (0, 1, 16, 0), avg-magnitude=0.097211, p90=0.31368, p95=0.38179, p99=0.4601
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer1/layer1.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.0/relu/Relu_output_0 | Stats: mean=0.097211, std-dev=0.13167, var=0.017337, median=0.0038297, min=0 at (0, 0, 0, 0), max=0.80771 at (0, 1, 16, 0), avg-magnitude=0.097211, p90=0.31368, p95=0.38179, p99=0.4601
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0808) |     121541 | ########################################
@@ -466,7 +466,7 @@
                 (0.565 , 0.646 ) |         77 | 
                 (0.646 , 0.727 ) |         27 | 
                 (0.727 , 0.808 ) |         38 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.0/relu/Relu_output_0 | Stats: mean=0.096344, std-dev=0.13014, var=0.016936, median=0.0076312, min=0 at (0, 0, 0, 0), max=0.80081 at (0, 1, 16, 0), avg-magnitude=0.096344, p90=0.30838, p95=0.37586, p99=0.45838
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.0/relu/Relu_output_0 | Stats: mean=0.096344, std-dev=0.13014, var=0.016936, median=0.0076312, min=0 at (0, 0, 0, 0), max=0.80081 at (0, 1, 16, 0), avg-magnitude=0.096344, p90=0.30838, p95=0.37586, p99=0.45838
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0808) |     121791 | ########################################
@@ -510,7 +510,7 @@
 [E]         FAILED | Output: '/layer1/layer1.0/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.0/conv2/Conv_output_0 | Stats: mean=0.0067159, std-dev=0.28766, var=0.08275, median=-0.0041228, min=-1.4613 at (0, 20, 54, 55), max=1.9012 at (0, 46, 55, 54), avg-magnitude=0.23262, p90=0.3755, p95=0.50366, p99=0.67936
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.0/conv2/Conv_output_0 | Stats: mean=0.0067159, std-dev=0.28766, var=0.08275, median=-0.0041228, min=-1.4613 at (0, 20, 54, 55), max=1.9012 at (0, 46, 55, 54), avg-magnitude=0.23262, p90=0.3755, p95=0.50366, p99=0.67936
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.46 , -1.12 ) |         54 | 
@@ -523,7 +523,7 @@
                 (0.897 , 1.23  ) |        369 | 
                 (1.23  , 1.57  ) |         26 | 
                 (1.57  , 1.91  ) |         37 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.0/conv2/Conv_output_0 | Stats: mean=0.0068118, std-dev=0.28434, var=0.08085, median=-0.0059776, min=-1.452 at (0, 20, 54, 55), max=1.9073 at (0, 46, 55, 54), avg-magnitude=0.22916, p90=0.37372, p95=0.49723, p99=0.67608
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.0/conv2/Conv_output_0 | Stats: mean=0.0068118, std-dev=0.28434, var=0.08085, median=-0.0059776, min=-1.452 at (0, 20, 54, 55), max=1.9073 at (0, 46, 55, 54), avg-magnitude=0.22916, p90=0.37372, p95=0.49723, p99=0.67608
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.46 , -1.12 ) |         54 | 
@@ -567,7 +567,7 @@
 [E]         FAILED | Output: '/layer1/layer1.0/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.0/Add_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.0/Add_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.0/Add_output_0 | Stats: mean=0.36248, std-dev=0.40637, var=0.16513, median=0.30723, min=-1.1756 at (0, 20, 54, 55), max=2.4607 at (0, 46, 55, 54), avg-magnitude=0.4254, p90=0.94474, p95=1.0636, p99=1.3005
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.0/Add_output_0 | Stats: mean=0.36248, std-dev=0.40637, var=0.16513, median=0.30723, min=-1.1756 at (0, 20, 54, 55), max=2.4607 at (0, 46, 55, 54), avg-magnitude=0.4254, p90=0.94474, p95=1.0636, p99=1.3005
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.18  , -0.811 ) |        112 | 
@@ -580,7 +580,7 @@
                 (1.37   , 1.74   ) |       1036 | 
                 (1.74   , 2.1    ) |         48 | 
                 (2.1    , 2.47   ) |         39 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.0/Add_output_0 | Stats: mean=0.36224, std-dev=0.40502, var=0.16404, median=0.30711, min=-1.1655 at (0, 20, 54, 55), max=2.4669 at (0, 46, 55, 54), avg-magnitude=0.42436, p90=0.94431, p95=1.0605, p99=1.2952
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.0/Add_output_0 | Stats: mean=0.36224, std-dev=0.40502, var=0.16404, median=0.30711, min=-1.1655 at (0, 20, 54, 55), max=2.4669 at (0, 46, 55, 54), avg-magnitude=0.42436, p90=0.94431, p95=1.0605, p99=1.2952
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.18  , -0.811 ) |        110 | 
@@ -624,8 +624,8 @@
 [E]         FAILED | Output: '/layer1/layer1.0/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer1/layer1.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.0/relu_1/Relu_output_0 | Stats: mean=0.39394, std-dev=0.36001, var=0.12961, median=0.30723, min=0 at (0, 1, 29, 24), max=2.4607 at (0, 46, 55, 54), avg-magnitude=0.39394, p90=0.94474, p95=1.0636, p99=1.3005
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer1/layer1.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.0/relu_1/Relu_output_0 | Stats: mean=0.39394, std-dev=0.36001, var=0.12961, median=0.30723, min=0 at (0, 1, 29, 24), max=2.4607 at (0, 46, 55, 54), avg-magnitude=0.39394, p90=0.94474, p95=1.0636, p99=1.3005
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.247) |      90308 | ########################################
@@ -638,7 +638,7 @@
                 (1.73 , 1.97 ) |         37 | 
                 (1.97 , 2.22 ) |         34 | 
                 (2.22 , 2.47 ) |         18 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.0/relu_1/Relu_output_0 | Stats: mean=0.3933, std-dev=0.35933, var=0.12912, median=0.30711, min=0 at (0, 1, 29, 24), max=2.4669 at (0, 46, 55, 54), avg-magnitude=0.3933, p90=0.94431, p95=1.0605, p99=1.2952
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.0/relu_1/Relu_output_0 | Stats: mean=0.3933, std-dev=0.35933, var=0.12912, median=0.30711, min=0 at (0, 1, 29, 24), max=2.4669 at (0, 46, 55, 54), avg-magnitude=0.3933, p90=0.94431, p95=1.0605, p99=1.2952
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.247) |      89940 | ########################################
@@ -682,7 +682,7 @@
 [E]         FAILED | Output: '/layer1/layer1.0/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.1/conv1/Conv_output_0 | Stats: mean=-0.029102, std-dev=0.25448, var=0.064762, median=-0.0011068, min=-1.6425 at (0, 1, 55, 55), max=1.5736 at (0, 35, 55, 55), avg-magnitude=0.19892, p90=0.26797, p95=0.33847, p99=0.4719
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.1/conv1/Conv_output_0 | Stats: mean=-0.029102, std-dev=0.25448, var=0.064762, median=-0.0011068, min=-1.6425 at (0, 1, 55, 55), max=1.5736 at (0, 35, 55, 55), avg-magnitude=0.19892, p90=0.26797, p95=0.33847, p99=0.4719
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.64  , -1.32  ) |         16 | 
@@ -695,7 +695,7 @@
                 (0.609  , 0.93   ) |        294 | 
                 (0.93   , 1.25   ) |         80 | 
                 (1.25   , 1.57   ) |          5 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.1/conv1/Conv_output_0 | Stats: mean=-0.028553, std-dev=0.25439, var=0.064716, median=-5.981e-05, min=-1.6245 at (0, 1, 55, 55), max=1.5619 at (0, 35, 55, 55), avg-magnitude=0.19857, p90=0.26771, p95=0.33899, p99=0.47366
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.1/conv1/Conv_output_0 | Stats: mean=-0.028553, std-dev=0.25439, var=0.064716, median=-5.981e-05, min=-1.6245 at (0, 1, 55, 55), max=1.5619 at (0, 35, 55, 55), avg-magnitude=0.19857, p90=0.26771, p95=0.33899, p99=0.47366
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.64  , -1.32  ) |         15 | 
@@ -739,8 +739,8 @@
 [E]         FAILED | Output: '/layer1/layer1.1/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.1/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.1/relu/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer1/layer1.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.1/relu/Relu_output_0 | Stats: mean=0.08491, std-dev=0.12241, var=0.014985, median=0, min=0 at (0, 0, 1, 2), max=1.5736 at (0, 35, 55, 55), avg-magnitude=0.08491, p90=0.26797, p95=0.33847, p99=0.4719
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer1/layer1.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.1/relu/Relu_output_0 | Stats: mean=0.08491, std-dev=0.12241, var=0.014985, median=0, min=0 at (0, 0, 1, 2), max=1.5736 at (0, 35, 55, 55), avg-magnitude=0.08491, p90=0.26797, p95=0.33847, p99=0.4719
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.157) |     153430 | ########################################
@@ -753,7 +753,7 @@
                 (1.1  , 1.26 ) |         22 | 
                 (1.26 , 1.42 ) |          3 | 
                 (1.42 , 1.57 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.1/relu/Relu_output_0 | Stats: mean=0.08501, std-dev=0.12243, var=0.014989, median=0, min=0 at (0, 0, 1, 2), max=1.5619 at (0, 35, 55, 55), avg-magnitude=0.08501, p90=0.26771, p95=0.33899, p99=0.47366
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.1/relu/Relu_output_0 | Stats: mean=0.08501, std-dev=0.12243, var=0.014989, median=0, min=0 at (0, 0, 1, 2), max=1.5619 at (0, 35, 55, 55), avg-magnitude=0.08501, p90=0.26771, p95=0.33899, p99=0.47366
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.157) |     153445 | ########################################
@@ -797,7 +797,7 @@
 [E]         FAILED | Output: '/layer1/layer1.1/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.1/conv2/Conv_output_0 | Stats: mean=0.025703, std-dev=0.32443, var=0.10526, median=0.013619, min=-2.0651 at (0, 52, 23, 6), max=1.8633 at (0, 38, 54, 5), avg-magnitude=0.24397, p90=0.4426, p95=0.59238, p99=0.88916
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.1/conv2/Conv_output_0 | Stats: mean=0.025703, std-dev=0.32443, var=0.10526, median=0.013619, min=-2.0651 at (0, 52, 23, 6), max=1.8633 at (0, 38, 54, 5), avg-magnitude=0.24397, p90=0.4426, p95=0.59238, p99=0.88916
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-2.07  , -1.67  ) |         21 | 
@@ -810,7 +810,7 @@
                 (0.701  , 1.1    ) |       5182 | ##
                 (1.1    , 1.49   ) |        560 | 
                 (1.49   , 1.89   ) |         27 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.1/conv2/Conv_output_0 | Stats: mean=0.025033, std-dev=0.32309, var=0.10439, median=0.012391, min=-2.0589 at (0, 52, 23, 6), max=1.886 at (0, 38, 54, 5), avg-magnitude=0.24181, p90=0.43704, p95=0.58725, p99=0.89746
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.1/conv2/Conv_output_0 | Stats: mean=0.025033, std-dev=0.32309, var=0.10439, median=0.012391, min=-2.0589 at (0, 52, 23, 6), max=1.886 at (0, 38, 54, 5), avg-magnitude=0.24181, p90=0.43704, p95=0.58725, p99=0.89746
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-2.07  , -1.67  ) |         24 | 
@@ -854,7 +854,7 @@
 [E]         FAILED | Output: '/layer1/layer1.1/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.1/Add_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.1/Add_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.1/Add_output_0 | Stats: mean=0.41964, std-dev=0.48604, var=0.23623, median=0.38165, min=-1.7653 at (0, 28, 14, 4), max=2.9478 at (0, 8, 55, 7), avg-magnitude=0.51345, p90=1.0579, p95=1.2226, p99=1.5904
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.1/Add_output_0 | Stats: mean=0.41964, std-dev=0.48604, var=0.23623, median=0.38165, min=-1.7653 at (0, 28, 14, 4), max=2.9478 at (0, 8, 55, 7), avg-magnitude=0.51345, p90=1.0579, p95=1.2226, p99=1.5904
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.77 , -1.29 ) |         60 | 
@@ -867,7 +867,7 @@
                 (1.53  , 2.01  ) |       2339 | #
                 (2.01  , 2.48  ) |        243 | 
                 (2.48  , 2.95  ) |         42 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.1/Add_output_0 | Stats: mean=0.41833, std-dev=0.48516, var=0.23538, median=0.38112, min=-1.7577 at (0, 28, 2, 29), max=2.9229 at (0, 8, 55, 46), avg-magnitude=0.51231, p90=1.0567, p95=1.2229, p99=1.591
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.1/Add_output_0 | Stats: mean=0.41833, std-dev=0.48516, var=0.23538, median=0.38112, min=-1.7577 at (0, 28, 2, 29), max=2.9229 at (0, 8, 55, 46), avg-magnitude=0.51231, p90=1.0567, p95=1.2229, p99=1.591
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.77 , -1.29 ) |         61 | 
@@ -911,8 +911,8 @@
 [E]         FAILED | Output: '/layer1/layer1.1/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer1/layer1.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56)) with '/layer1/layer1.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 64, 56, 56))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer1/layer1.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer1/layer1.1/relu_1/Relu_output_0 | Stats: mean=0.46654, std-dev=0.41849, var=0.17513, median=0.38165, min=0 at (0, 1, 0, 1), max=2.9478 at (0, 8, 55, 7), avg-magnitude=0.46654, p90=1.0579, p95=1.2226, p99=1.5904
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer1/layer1.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer1/layer1.1/relu_1/Relu_output_0 | Stats: mean=0.46654, std-dev=0.41849, var=0.17513, median=0.38165, min=0 at (0, 1, 0, 1), max=2.9478 at (0, 8, 55, 7), avg-magnitude=0.46654, p90=1.0579, p95=1.2226, p99=1.5904
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.295) |      85300 | ########################################
@@ -925,7 +925,7 @@
                 (2.06 , 2.36 ) |        155 | 
                 (2.36 , 2.65 ) |         50 | 
                 (2.65 , 2.95 ) |         21 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer1/layer1.1/relu_1/Relu_output_0 | Stats: mean=0.46532, std-dev=0.41748, var=0.17429, median=0.38112, min=0 at (0, 1, 0, 1), max=2.9229 at (0, 8, 55, 46), avg-magnitude=0.46532, p90=1.0567, p95=1.2229, p99=1.591
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer1/layer1.1/relu_1/Relu_output_0 | Stats: mean=0.46532, std-dev=0.41748, var=0.17429, median=0.38112, min=0 at (0, 1, 0, 1), max=2.9229 at (0, 8, 55, 46), avg-magnitude=0.46532, p90=1.0567, p95=1.2229, p99=1.591
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.295) |      85317 | ########################################
@@ -969,7 +969,7 @@
 [E]         FAILED | Output: '/layer1/layer1.1/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/conv1/Conv_output_0 | Stats: mean=-0.044575, std-dev=0.26035, var=0.067781, median=-0.046455, min=-1.5675 at (0, 110, 18, 9), max=1.4731 at (0, 112, 5, 27), avg-magnitude=0.20559, p90=0.27962, p95=0.37905, p99=0.58513
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/conv1/Conv_output_0 | Stats: mean=-0.044575, std-dev=0.26035, var=0.067781, median=-0.046455, min=-1.5675 at (0, 110, 18, 9), max=1.4731 at (0, 112, 5, 27), avg-magnitude=0.20559, p90=0.27962, p95=0.37905, p99=0.58513
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.57  , -1.26  ) |         14 | 
@@ -982,7 +982,7 @@
                 (0.561  , 0.865  ) |       1166 | #
                 (0.865  , 1.17   ) |         65 | 
                 (1.17   , 1.47   ) |         11 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/conv1/Conv_output_0 | Stats: mean=-0.043427, std-dev=0.26037, var=0.067793, median=-0.044643, min=-1.5679 at (0, 110, 18, 9), max=1.4496 at (0, 112, 5, 27), avg-magnitude=0.20528, p90=0.27975, p95=0.37937, p99=0.58249
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/conv1/Conv_output_0 | Stats: mean=-0.043427, std-dev=0.26037, var=0.067793, median=-0.044643, min=-1.5679 at (0, 110, 18, 9), max=1.4496 at (0, 112, 5, 27), avg-magnitude=0.20528, p90=0.27975, p95=0.37937, p99=0.58249
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.57  , -1.26  ) |         14 | 
@@ -1026,7 +1026,7 @@
 [E]         FAILED | Output: '/layer2/layer2.0/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/downsample/downsample.0/Conv_output_0 | Stats: mean=0.023717, std-dev=0.21739, var=0.047259, median=0.023484, min=-1.8388 at (0, 20, 14, 0), max=1.6816 at (0, 34, 27, 25), avg-magnitude=0.15566, p90=0.26197, p95=0.40257, p99=0.66924
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/downsample/downsample.0/Conv_output_0 | Stats: mean=0.023717, std-dev=0.21739, var=0.047259, median=0.023484, min=-1.8388 at (0, 20, 14, 0), max=1.6816 at (0, 34, 27, 25), avg-magnitude=0.15566, p90=0.26197, p95=0.40257, p99=0.66924
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.86  , -1.51  ) |          3 | 
@@ -1039,7 +1039,7 @@
                 (0.619  , 0.973  ) |       1320 | 
                 (0.973  , 1.33   ) |         75 | 
                 (1.33   , 1.68   ) |          3 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/downsample/downsample.0/Conv_output_0 | Stats: mean=0.022739, std-dev=0.21642, var=0.046838, median=0.022664, min=-1.862 at (0, 20, 14, 0), max=1.6076 at (0, 34, 27, 25), avg-magnitude=0.15508, p90=0.26003, p95=0.39672, p99=0.66448
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/downsample/downsample.0/Conv_output_0 | Stats: mean=0.022739, std-dev=0.21642, var=0.046838, median=0.022664, min=-1.862 at (0, 20, 14, 0), max=1.6076 at (0, 34, 27, 25), avg-magnitude=0.15508, p90=0.26003, p95=0.39672, p99=0.66448
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.86  , -1.51  ) |          4 | 
@@ -1083,8 +1083,8 @@
 [E]         FAILED | Output: '/layer2/layer2.0/downsample/downsample.0/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/relu/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/relu/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer2/layer2.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/relu/Relu_output_0 | Stats: mean=0.080508, std-dev=0.1378, var=0.01899, median=0, min=0 at (0, 0, 0, 0), max=1.4731 at (0, 112, 5, 27), avg-magnitude=0.080508, p90=0.27962, p95=0.37905, p99=0.58513
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer2/layer2.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/relu/Relu_output_0 | Stats: mean=0.080508, std-dev=0.1378, var=0.01899, median=0, min=0 at (0, 0, 0, 0), max=1.4731 at (0, 112, 5, 27), avg-magnitude=0.080508, p90=0.27962, p95=0.37905, p99=0.58513
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.147) |      78194 | ########################################
@@ -1097,7 +1097,7 @@
                 (1.03 , 1.18 ) |         12 | 
                 (1.18 , 1.33 ) |          8 | 
                 (1.33 , 1.47 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/relu/Relu_output_0 | Stats: mean=0.080926, std-dev=0.13768, var=0.018956, median=0, min=0 at (0, 0, 0, 0), max=1.4496 at (0, 112, 5, 27), avg-magnitude=0.080926, p90=0.27975, p95=0.37937, p99=0.58249
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/relu/Relu_output_0 | Stats: mean=0.080926, std-dev=0.13768, var=0.018956, median=0, min=0 at (0, 0, 0, 0), max=1.4496 at (0, 112, 5, 27), avg-magnitude=0.080926, p90=0.27975, p95=0.37937, p99=0.58249
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.147) |      78070 | ########################################
@@ -1141,7 +1141,7 @@
 [E]         FAILED | Output: '/layer2/layer2.0/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/conv2/Conv_output_0 | Stats: mean=0.021422, std-dev=0.22961, var=0.052722, median=0.019551, min=-1.2188 at (0, 42, 26, 26), max=2.2526 at (0, 115, 0, 27), avg-magnitude=0.17959, p90=0.31221, p95=0.3968, p99=0.55521
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/conv2/Conv_output_0 | Stats: mean=0.021422, std-dev=0.22961, var=0.052722, median=0.019551, min=-1.2188 at (0, 42, 26, 26), max=2.2526 at (0, 115, 0, 27), avg-magnitude=0.17959, p90=0.31221, p95=0.3968, p99=0.55521
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.22 , -0.872) |         19 | 
@@ -1154,7 +1154,7 @@
                 (1.21  , 1.56  ) |          8 | 
                 (1.56  , 1.91  ) |          2 | 
                 (1.91  , 2.25  ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/conv2/Conv_output_0 | Stats: mean=0.022552, std-dev=0.23033, var=0.053051, median=0.021418, min=-1.2074 at (0, 42, 26, 26), max=2.2354 at (0, 115, 0, 27), avg-magnitude=0.18027, p90=0.31259, p95=0.39861, p99=0.55818
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/conv2/Conv_output_0 | Stats: mean=0.022552, std-dev=0.23033, var=0.053051, median=0.021418, min=-1.2074 at (0, 42, 26, 26), max=2.2354 at (0, 115, 0, 27), avg-magnitude=0.18027, p90=0.31259, p95=0.39861, p99=0.55818
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.22 , -0.872) |         22 | 
@@ -1198,7 +1198,7 @@
 [E]         FAILED | Output: '/layer2/layer2.0/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/Add_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/Add_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/Add_output_0 | Stats: mean=0.045139, std-dev=0.33739, var=0.11383, median=0.058573, min=-1.8577 at (0, 20, 13, 23), max=2.4713 at (0, 115, 27, 27), avg-magnitude=0.26411, p90=0.45083, p95=0.58591, p99=0.84057
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/Add_output_0 | Stats: mean=0.045139, std-dev=0.33739, var=0.11383, median=0.058573, min=-1.8577 at (0, 20, 13, 23), max=2.4713 at (0, 115, 27, 27), avg-magnitude=0.26411, p90=0.45083, p95=0.58591, p99=0.84057
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.88 , -1.44 ) |         14 | 
@@ -1211,7 +1211,7 @@
                 (1.17  , 1.6   ) |         57 | 
                 (1.6   , 2.04  ) |          4 | 
                 (2.04  , 2.47  ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/Add_output_0 | Stats: mean=0.045291, std-dev=0.33751, var=0.11391, median=0.059105, min=-1.8762 at (0, 20, 13, 23), max=2.4584 at (0, 115, 27, 27), avg-magnitude=0.26504, p90=0.45031, p95=0.58493, p99=0.83947
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/Add_output_0 | Stats: mean=0.045291, std-dev=0.33751, var=0.11391, median=0.059105, min=-1.8762 at (0, 20, 13, 23), max=2.4584 at (0, 115, 27, 27), avg-magnitude=0.26504, p90=0.45031, p95=0.58493, p99=0.83947
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.88 , -1.44 ) |         16 | 
@@ -1255,8 +1255,8 @@
 [E]         FAILED | Output: '/layer2/layer2.0/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer2/layer2.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.0/relu_1/Relu_output_0 | Stats: mean=0.15462, std-dev=0.20689, var=0.042803, median=0.058573, min=0 at (0, 0, 0, 4), max=2.4713 at (0, 115, 27, 27), avg-magnitude=0.15462, p90=0.45083, p95=0.58591, p99=0.84057
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer2/layer2.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.0/relu_1/Relu_output_0 | Stats: mean=0.15462, std-dev=0.20689, var=0.042803, median=0.058573, min=0 at (0, 0, 0, 4), max=2.4713 at (0, 115, 27, 27), avg-magnitude=0.15462, p90=0.45083, p95=0.58591, p99=0.84057
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.247) |      74334 | ########################################
@@ -1269,7 +1269,7 @@
                 (1.73 , 1.98 ) |          3 | 
                 (1.98 , 2.22 ) |          0 | 
                 (2.22 , 2.47 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.0/relu_1/Relu_output_0 | Stats: mean=0.15517, std-dev=0.20657, var=0.042672, median=0.059105, min=0 at (0, 0, 0, 4), max=2.4584 at (0, 115, 27, 27), avg-magnitude=0.15517, p90=0.45031, p95=0.58493, p99=0.83947
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.0/relu_1/Relu_output_0 | Stats: mean=0.15517, std-dev=0.20657, var=0.042672, median=0.059105, min=0 at (0, 0, 0, 4), max=2.4584 at (0, 115, 27, 27), avg-magnitude=0.15517, p90=0.45031, p95=0.58493, p99=0.83947
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.247) |      74143 | ########################################
@@ -1313,7 +1313,7 @@
 [E]         FAILED | Output: '/layer2/layer2.0/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.1/conv1/Conv_output_0 | Stats: mean=-0.1302, std-dev=0.23432, var=0.054906, median=-0.1078, min=-1.9266 at (0, 15, 14, 23), max=1.5524 at (0, 87, 0, 27), avg-magnitude=0.19974, p90=0.13439, p95=0.20784, p99=0.36614
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.1/conv1/Conv_output_0 | Stats: mean=-0.1302, std-dev=0.23432, var=0.054906, median=-0.1078, min=-1.9266 at (0, 15, 14, 23), max=1.5524 at (0, 87, 0, 27), avg-magnitude=0.19974, p90=0.13439, p95=0.20784, p99=0.36614
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.96 , -1.61 ) |          1 | 
@@ -1326,7 +1326,7 @@
                 (0.5   , 0.851 ) |        193 | 
                 (0.851 , 1.2   ) |          2 | 
                 (1.2   , 1.55  ) |          3 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.1/conv1/Conv_output_0 | Stats: mean=-0.13088, std-dev=0.23449, var=0.054983, median=-0.10882, min=-1.957 at (0, 15, 14, 23), max=1.5215 at (0, 87, 0, 27), avg-magnitude=0.20025, p90=0.13461, p95=0.20838, p99=0.3684
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.1/conv1/Conv_output_0 | Stats: mean=-0.13088, std-dev=0.23449, var=0.054983, median=-0.10882, min=-1.957 at (0, 15, 14, 23), max=1.5215 at (0, 87, 0, 27), avg-magnitude=0.20025, p90=0.13461, p95=0.20838, p99=0.3684
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.96 , -1.61 ) |          1 | 
@@ -1370,8 +1370,8 @@
 [E]         FAILED | Output: '/layer2/layer2.1/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.1/relu/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.1/relu/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer2/layer2.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.1/relu/Relu_output_0 | Stats: mean=0.03477, std-dev=0.07907, var=0.0062521, median=0, min=0 at (0, 0, 0, 0), max=1.5524 at (0, 87, 0, 27), avg-magnitude=0.03477, p90=0.13439, p95=0.20784, p99=0.36614
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer2/layer2.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.1/relu/Relu_output_0 | Stats: mean=0.03477, std-dev=0.07907, var=0.0062521, median=0, min=0 at (0, 0, 0, 0), max=1.5524 at (0, 87, 0, 27), avg-magnitude=0.03477, p90=0.13439, p95=0.20784, p99=0.36614
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.155) |      92011 | ########################################
@@ -1384,7 +1384,7 @@
                 (1.09 , 1.24 ) |          1 | 
                 (1.24 , 1.4  ) |          1 | 
                 (1.4  , 1.55 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.1/relu/Relu_output_0 | Stats: mean=0.034685, std-dev=0.079145, var=0.006264, median=0, min=0 at (0, 0, 0, 0), max=1.5215 at (0, 87, 0, 27), avg-magnitude=0.034685, p90=0.13461, p95=0.20838, p99=0.3684
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.1/relu/Relu_output_0 | Stats: mean=0.034685, std-dev=0.079145, var=0.006264, median=0, min=0 at (0, 0, 0, 0), max=1.5215 at (0, 87, 0, 27), avg-magnitude=0.034685, p90=0.13461, p95=0.20838, p99=0.3684
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.155) |      92034 | ########################################
@@ -1428,7 +1428,7 @@
 [E]         FAILED | Output: '/layer2/layer2.1/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.1/conv2/Conv_output_0 | Stats: mean=-0.12456, std-dev=0.24215, var=0.058637, median=-0.12155, min=-1.6043 at (0, 124, 27, 2), max=1.5513 at (0, 115, 1, 27), avg-magnitude=0.21186, p90=0.16402, p95=0.26411, p99=0.49372
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.1/conv2/Conv_output_0 | Stats: mean=-0.12456, std-dev=0.24215, var=0.058637, median=-0.12155, min=-1.6043 at (0, 124, 27, 2), max=1.5513 at (0, 115, 1, 27), avg-magnitude=0.21186, p90=0.16402, p95=0.26411, p99=0.49372
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.6   , -1.29  ) |         16 | 
@@ -1441,7 +1441,7 @@
                 (0.605  , 0.92   ) |        376 | 
                 (0.92   , 1.24   ) |         34 | 
                 (1.24   , 1.55   ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.1/conv2/Conv_output_0 | Stats: mean=-0.12419, std-dev=0.2426, var=0.058854, median=-0.12057, min=-1.5636 at (0, 35, 26, 27), max=1.545 at (0, 115, 1, 27), avg-magnitude=0.21191, p90=0.16412, p95=0.26592, p99=0.493
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.1/conv2/Conv_output_0 | Stats: mean=-0.12419, std-dev=0.2426, var=0.058854, median=-0.12057, min=-1.5636 at (0, 35, 26, 27), max=1.545 at (0, 115, 1, 27), avg-magnitude=0.21191, p90=0.16412, p95=0.26592, p99=0.493
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.6   , -1.29  ) |         15 | 
@@ -1485,7 +1485,7 @@
 [E]         FAILED | Output: '/layer2/layer2.1/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.1/Add_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.1/Add_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.1/Add_output_0 | Stats: mean=0.030066, std-dev=0.30164, var=0.090989, median=0.023608, min=-1.4759 at (0, 76, 26, 26), max=3.42 at (0, 115, 27, 27), avg-magnitude=0.23634, p90=0.40962, p95=0.53744, p99=0.79482
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.1/Add_output_0 | Stats: mean=0.030066, std-dev=0.30164, var=0.090989, median=0.023608, min=-1.4759 at (0, 76, 26, 26), max=3.42 at (0, 115, 27, 27), avg-magnitude=0.23634, p90=0.40962, p95=0.53744, p99=0.79482
 [I]             ---- Histogram ----
                 Bin Range            |  Num Elems | Visualization
                 (-1.48   , -0.99   ) |         53 | 
@@ -1498,7 +1498,7 @@
                 (1.95    , 2.44    ) |          2 | 
                 (2.44    , 2.93    ) |          1 | 
                 (2.93    , 3.42    ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.1/Add_output_0 | Stats: mean=0.030979, std-dev=0.3017, var=0.091021, median=0.025938, min=-1.4795 at (0, 35, 17, 27), max=3.4089 at (0, 115, 27, 27), avg-magnitude=0.23653, p90=0.41082, p95=0.53676, p99=0.78651
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.1/Add_output_0 | Stats: mean=0.030979, std-dev=0.3017, var=0.091021, median=0.025938, min=-1.4795 at (0, 35, 17, 27), max=3.4089 at (0, 115, 27, 27), avg-magnitude=0.23653, p90=0.41082, p95=0.53676, p99=0.78651
 [I]             ---- Histogram ----
                 Bin Range            |  Num Elems | Visualization
                 (-1.48   , -0.99   ) |         52 | 
@@ -1542,8 +1542,8 @@
 [E]         FAILED | Output: '/layer2/layer2.1/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer2/layer2.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28)) with '/layer2/layer2.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 128, 28, 28))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer2/layer2.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer2/layer2.1/relu_1/Relu_output_0 | Stats: mean=0.1332, std-dev=0.19246, var=0.03704, median=0.023608, min=0 at (0, 0, 0, 4), max=3.42 at (0, 115, 27, 27), avg-magnitude=0.1332, p90=0.40962, p95=0.53744, p99=0.79482
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer2/layer2.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer2/layer2.1/relu_1/Relu_output_0 | Stats: mean=0.1332, std-dev=0.19246, var=0.03704, median=0.023608, min=0 at (0, 0, 0, 4), max=3.42 at (0, 115, 27, 27), avg-magnitude=0.1332, p90=0.40962, p95=0.53744, p99=0.79482
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.342) |      86214 | ########################################
@@ -1556,7 +1556,7 @@
                 (2.39 , 2.74 ) |          1 | 
                 (2.74 , 3.08 ) |          0 | 
                 (3.08 , 3.42 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer2/layer2.1/relu_1/Relu_output_0 | Stats: mean=0.13375, std-dev=0.19226, var=0.036965, median=0.025938, min=0 at (0, 0, 0, 4), max=3.4089 at (0, 115, 27, 27), avg-magnitude=0.13375, p90=0.41082, p95=0.53676, p99=0.78651
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer2/layer2.1/relu_1/Relu_output_0 | Stats: mean=0.13375, std-dev=0.19226, var=0.036965, median=0.025938, min=0 at (0, 0, 0, 4), max=3.4089 at (0, 115, 27, 27), avg-magnitude=0.13375, p90=0.41082, p95=0.53676, p99=0.78651
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.342) |      86086 | ########################################
@@ -1600,7 +1600,7 @@
 [E]         FAILED | Output: '/layer2/layer2.1/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/conv1/Conv_output_0 | Stats: mean=-0.12297, std-dev=0.23252, var=0.054065, median=-0.12108, min=-1.2659 at (0, 110, 1, 4), max=1.4083 at (0, 116, 0, 13), avg-magnitude=0.20646, p90=0.1642, p95=0.24177, p99=0.40335
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/conv1/Conv_output_0 | Stats: mean=-0.12297, std-dev=0.23252, var=0.054065, median=-0.12108, min=-1.2659 at (0, 110, 1, 4), max=1.4083 at (0, 116, 0, 13), avg-magnitude=0.20646, p90=0.1642, p95=0.24177, p99=0.40335
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.27 , -0.997) |        118 | 
@@ -1613,7 +1613,7 @@
                 (0.613 , 0.882 ) |         76 | 
                 (0.882 , 1.15  ) |          6 | 
                 (1.15  , 1.42  ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/conv1/Conv_output_0 | Stats: mean=-0.12227, std-dev=0.23208, var=0.05386, median=-0.12101, min=-1.2614 at (0, 215, 5, 8), max=1.4184 at (0, 116, 0, 13), avg-magnitude=0.20589, p90=0.16422, p95=0.24157, p99=0.40228
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/conv1/Conv_output_0 | Stats: mean=-0.12227, std-dev=0.23208, var=0.05386, median=-0.12101, min=-1.2614 at (0, 215, 5, 8), max=1.4184 at (0, 116, 0, 13), avg-magnitude=0.20589, p90=0.16422, p95=0.24157, p99=0.40228
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.27 , -0.997) |        106 | 
@@ -1657,7 +1657,7 @@
 [E]         FAILED | Output: '/layer3/layer3.0/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.024197, std-dev=0.1102, var=0.012144, median=-0.006293, min=-0.92112 at (0, 137, 3, 0), max=0.36116 at (0, 65, 1, 7), avg-magnitude=0.081922, p90=0.091779, p95=0.11811, p99=0.18505
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.024197, std-dev=0.1102, var=0.012144, median=-0.006293, min=-0.92112 at (0, 137, 3, 0), max=0.36116 at (0, 65, 1, 7), avg-magnitude=0.081922, p90=0.091779, p95=0.11811, p99=0.18505
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-0.935 , -0.804 ) |          4 | 
@@ -1670,7 +1670,7 @@
                 (-0.0152, 0.116  ) |      24513 | ########################################
                 (0.116  , 0.248  ) |       2592 | ####
                 (0.248  , 0.379  ) |         45 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.024265, std-dev=0.1101, var=0.012123, median=-0.0056941, min=-0.93492 at (0, 137, 3, 0), max=0.37898 at (0, 65, 1, 7), avg-magnitude=0.08159, p90=0.091248, p95=0.11747, p99=0.18473
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.024265, std-dev=0.1101, var=0.012123, median=-0.0056941, min=-0.93492 at (0, 137, 3, 0), max=0.37898 at (0, 65, 1, 7), avg-magnitude=0.08159, p90=0.091248, p95=0.11747, p99=0.18473
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-0.935 , -0.804 ) |          4 | 
@@ -1714,8 +1714,8 @@
 [E]         FAILED | Output: '/layer3/layer3.0/downsample/downsample.0/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/relu/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/relu/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer3/layer3.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/relu/Relu_output_0 | Stats: mean=0.041743, std-dev=0.090866, var=0.0082567, median=0, min=0 at (0, 0, 0, 2), max=1.4083 at (0, 116, 0, 13), avg-magnitude=0.041743, p90=0.1642, p95=0.24177, p99=0.40335
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer3/layer3.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/relu/Relu_output_0 | Stats: mean=0.041743, std-dev=0.090866, var=0.0082567, median=0, min=0 at (0, 0, 0, 2), max=1.4083 at (0, 116, 0, 13), avg-magnitude=0.041743, p90=0.1642, p95=0.24177, p99=0.40335
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.142) |      44192 | ########################################
@@ -1728,7 +1728,7 @@
                 (0.993, 1.13 ) |          2 | 
                 (1.13 , 1.28 ) |          0 | 
                 (1.28 , 1.42 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/relu/Relu_output_0 | Stats: mean=0.041812, std-dev=0.090857, var=0.0082549, median=0, min=0 at (0, 0, 0, 2), max=1.4184 at (0, 116, 0, 13), avg-magnitude=0.041812, p90=0.16422, p95=0.24157, p99=0.40228
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/relu/Relu_output_0 | Stats: mean=0.041812, std-dev=0.090857, var=0.0082549, median=0, min=0 at (0, 0, 0, 2), max=1.4184 at (0, 116, 0, 13), avg-magnitude=0.041812, p90=0.16422, p95=0.24157, p99=0.40228
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.142) |      44181 | ########################################
@@ -1772,7 +1772,7 @@
 [E]         FAILED | Output: '/layer3/layer3.0/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/conv2/Conv_output_0 | Stats: mean=-0.0019944, std-dev=0.19747, var=0.038994, median=-0.0023396, min=-1.251 at (0, 137, 1, 13), max=2.4438 at (0, 117, 0, 13), avg-magnitude=0.15296, p90=0.23708, p95=0.31262, p99=0.47131
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/conv2/Conv_output_0 | Stats: mean=-0.0019944, std-dev=0.19747, var=0.038994, median=-0.0023396, min=-1.251 at (0, 137, 1, 13), max=2.4438 at (0, 117, 0, 13), avg-magnitude=0.15296, p90=0.23708, p95=0.31262, p99=0.47131
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.25 , -0.878) |          3 | 
@@ -1785,7 +1785,7 @@
                 (1.36  , 1.73  ) |         11 | 
                 (1.73  , 2.1   ) |          3 | 
                 (2.1   , 2.48  ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/conv2/Conv_output_0 | Stats: mean=-0.0034733, std-dev=0.19939, var=0.039758, median=-0.0025911, min=-1.2291 at (0, 137, 1, 13), max=2.4755 at (0, 117, 0, 13), avg-magnitude=0.15467, p90=0.23705, p95=0.31232, p99=0.47301
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/conv2/Conv_output_0 | Stats: mean=-0.0034733, std-dev=0.19939, var=0.039758, median=-0.0025911, min=-1.2291 at (0, 137, 1, 13), max=2.4755 at (0, 117, 0, 13), avg-magnitude=0.15467, p90=0.23705, p95=0.31232, p99=0.47301
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.25 , -0.878) |          2 | 
@@ -1829,7 +1829,7 @@
 [E]         FAILED | Output: '/layer3/layer3.0/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/Add_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/Add_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/Add_output_0 | Stats: mean=-0.026192, std-dev=0.25097, var=0.062986, median=-0.015727, min=-1.4355 at (0, 137, 13, 1), max=2.0011 at (0, 117, 0, 13), avg-magnitude=0.19703, p90=0.28395, p95=0.36536, p99=0.54066
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/Add_output_0 | Stats: mean=-0.026192, std-dev=0.25097, var=0.062986, median=-0.015727, min=-1.4355 at (0, 137, 13, 1), max=2.0011 at (0, 117, 0, 13), avg-magnitude=0.19703, p90=0.28395, p95=0.36536, p99=0.54066
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.44  , -1.09  ) |         10 | 
@@ -1842,7 +1842,7 @@
                 (0.99   , 1.34   ) |         10 | 
                 (1.34   , 1.68   ) |          4 | 
                 (1.68   , 2.03   ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/Add_output_0 | Stats: mean=-0.027738, std-dev=0.25323, var=0.064125, median=-0.016808, min=-1.4235 at (0, 137, 1, 13), max=2.0293 at (0, 117, 0, 13), avg-magnitude=0.19887, p90=0.28542, p95=0.36674, p99=0.5283
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/Add_output_0 | Stats: mean=-0.027738, std-dev=0.25323, var=0.064125, median=-0.016808, min=-1.4235 at (0, 137, 1, 13), max=2.0293 at (0, 117, 0, 13), avg-magnitude=0.19887, p90=0.28542, p95=0.36674, p99=0.5283
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-1.44  , -1.09  ) |         11 | 
@@ -1886,8 +1886,8 @@
 [E]         FAILED | Output: '/layer3/layer3.0/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer3/layer3.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.0/relu_1/Relu_output_0 | Stats: mean=0.085417, std-dev=0.13258, var=0.017577, median=0, min=0 at (0, 2, 0, 0), max=2.0011 at (0, 117, 0, 13), avg-magnitude=0.085417, p90=0.28395, p95=0.36536, p99=0.54066
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer3/layer3.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.0/relu_1/Relu_output_0 | Stats: mean=0.085417, std-dev=0.13258, var=0.017577, median=0, min=0 at (0, 2, 0, 0), max=2.0011 at (0, 117, 0, 13), avg-magnitude=0.085417, p90=0.28395, p95=0.36536, p99=0.54066
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.203) |      41302 | ########################################
@@ -1900,7 +1900,7 @@
                 (1.42 , 1.62 ) |          3 | 
                 (1.62 , 1.83 ) |          0 | 
                 (1.83 , 2.03 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.0/relu_1/Relu_output_0 | Stats: mean=0.085567, std-dev=0.13259, var=0.01758, median=0, min=0 at (0, 2, 0, 0), max=2.0293 at (0, 117, 0, 13), avg-magnitude=0.085567, p90=0.28542, p95=0.36674, p99=0.5283
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.0/relu_1/Relu_output_0 | Stats: mean=0.085567, std-dev=0.13259, var=0.01758, median=0, min=0 at (0, 2, 0, 0), max=2.0293 at (0, 117, 0, 13), avg-magnitude=0.085567, p90=0.28542, p95=0.36674, p99=0.5283
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.203) |      41249 | ########################################
@@ -1944,7 +1944,7 @@
 [E]         FAILED | Output: '/layer3/layer3.0/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.1/conv1/Conv_output_0 | Stats: mean=-0.1144, std-dev=0.1721, var=0.029619, median=-0.10753, min=-1.2137 at (0, 205, 1, 11), max=1.3219 at (0, 69, 0, 12), avg-magnitude=0.16165, p90=0.085602, p95=0.14926, p99=0.32153
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.1/conv1/Conv_output_0 | Stats: mean=-0.1144, std-dev=0.1721, var=0.029619, median=-0.10753, min=-1.2137 at (0, 205, 1, 11), max=1.3219 at (0, 69, 0, 12), avg-magnitude=0.16165, p90=0.085602, p95=0.14926, p99=0.32153
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.21 , -0.96 ) |          9 | 
@@ -1957,7 +1957,7 @@
                 (0.561 , 0.815 ) |         37 | 
                 (0.815 , 1.07  ) |          5 | 
                 (1.07  , 1.32  ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.1/conv1/Conv_output_0 | Stats: mean=-0.11726, std-dev=0.17302, var=0.029936, median=-0.10949, min=-1.2008 at (0, 205, 1, 11), max=1.2921 at (0, 69, 0, 12), avg-magnitude=0.1636, p90=0.083856, p95=0.14802, p99=0.31645
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.1/conv1/Conv_output_0 | Stats: mean=-0.11726, std-dev=0.17302, var=0.029936, median=-0.10949, min=-1.2008 at (0, 205, 1, 11), max=1.2921 at (0, 69, 0, 12), avg-magnitude=0.1636, p90=0.083856, p95=0.14802, p99=0.31645
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.21 , -0.96 ) |          9 | 
@@ -2001,8 +2001,8 @@
 [E]         FAILED | Output: '/layer3/layer3.1/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.1/relu/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.1/relu/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer3/layer3.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.1/relu/Relu_output_0 | Stats: mean=0.023624, std-dev=0.064407, var=0.0041483, median=0, min=0 at (0, 0, 1, 1), max=1.3219 at (0, 69, 0, 12), avg-magnitude=0.023624, p90=0.085602, p95=0.14926, p99=0.32153
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer3/layer3.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.1/relu/Relu_output_0 | Stats: mean=0.023624, std-dev=0.064407, var=0.0041483, median=0, min=0 at (0, 0, 1, 1), max=1.3219 at (0, 69, 0, 12), avg-magnitude=0.023624, p90=0.085602, p95=0.14926, p99=0.32153
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.132) |      47168 | ########################################
@@ -2015,7 +2015,7 @@
                 (0.925, 1.06 ) |          3 | 
                 (1.06 , 1.19 ) |          1 | 
                 (1.19 , 1.32 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.1/relu/Relu_output_0 | Stats: mean=0.023174, std-dev=0.063759, var=0.0040652, median=0, min=0 at (0, 0, 1, 1), max=1.2921 at (0, 69, 0, 12), avg-magnitude=0.023174, p90=0.083856, p95=0.14802, p99=0.31645
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.1/relu/Relu_output_0 | Stats: mean=0.023174, std-dev=0.063759, var=0.0040652, median=0, min=0 at (0, 0, 1, 1), max=1.2921 at (0, 69, 0, 12), avg-magnitude=0.023174, p90=0.083856, p95=0.14802, p99=0.31645
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.132) |      47203 | ########################################
@@ -2059,7 +2059,7 @@
 [E]         FAILED | Output: '/layer3/layer3.1/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.1/conv2/Conv_output_0 | Stats: mean=-0.084236, std-dev=0.20956, var=0.043915, median=-0.069384, min=-2.2207 at (0, 128, 1, 1), max=1.4402 at (0, 229, 0, 12), avg-magnitude=0.16318, p90=0.13676, p95=0.22669, p99=0.4045
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.1/conv2/Conv_output_0 | Stats: mean=-0.084236, std-dev=0.20956, var=0.043915, median=-0.069384, min=-2.2207 at (0, 128, 1, 1), max=1.4402 at (0, 229, 0, 12), avg-magnitude=0.16318, p90=0.13676, p95=0.22669, p99=0.4045
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-2.24  , -1.87  ) |          3 | 
@@ -2072,7 +2072,7 @@
                 (0.336  , 0.704  ) |        943 | #
                 (0.704  , 1.07   ) |         61 | 
                 (1.07   , 1.44   ) |          8 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.1/conv2/Conv_output_0 | Stats: mean=-0.080421, std-dev=0.20841, var=0.043433, median=-0.066771, min=-2.2406 at (0, 128, 1, 1), max=1.3908 at (0, 229, 0, 12), avg-magnitude=0.16142, p90=0.14057, p95=0.23017, p99=0.40954
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.1/conv2/Conv_output_0 | Stats: mean=-0.080421, std-dev=0.20841, var=0.043433, median=-0.066771, min=-2.2406 at (0, 128, 1, 1), max=1.3908 at (0, 229, 0, 12), avg-magnitude=0.16142, p90=0.14057, p95=0.23017, p99=0.40954
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-2.24  , -1.87  ) |          3 | 
@@ -2116,7 +2116,7 @@
 [E]         FAILED | Output: '/layer3/layer3.1/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.1/Add_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.1/Add_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.1/Add_output_0 | Stats: mean=0.0011815, std-dev=0.24268, var=0.058892, median=0.0013815, min=-2.2207 at (0, 128, 1, 1), max=1.6673 at (0, 229, 0, 12), avg-magnitude=0.18222, p90=0.28439, p95=0.37384, p99=0.58937
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.1/Add_output_0 | Stats: mean=0.0011815, std-dev=0.24268, var=0.058892, median=0.0013815, min=-2.2207 at (0, 128, 1, 1), max=1.6673 at (0, 229, 0, 12), avg-magnitude=0.18222, p90=0.28439, p95=0.37384, p99=0.58937
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-2.24 , -1.85 ) |          3 | 
@@ -2129,7 +2129,7 @@
                 (0.495 , 0.886 ) |        939 | #
                 (0.886 , 1.28  ) |         75 | 
                 (1.28  , 1.67  ) |         16 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.1/Add_output_0 | Stats: mean=0.0051463, std-dev=0.24105, var=0.058104, median=0.0053074, min=-2.2406 at (0, 128, 1, 1), max=1.6229 at (0, 229, 0, 12), avg-magnitude=0.18101, p90=0.28595, p95=0.37653, p99=0.58678
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.1/Add_output_0 | Stats: mean=0.0051463, std-dev=0.24105, var=0.058104, median=0.0053074, min=-2.2406 at (0, 128, 1, 1), max=1.6229 at (0, 229, 0, 12), avg-magnitude=0.18101, p90=0.28595, p95=0.37653, p99=0.58678
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-2.24 , -1.85 ) |          3 | 
@@ -2173,8 +2173,8 @@
 [E]         FAILED | Output: '/layer3/layer3.1/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer3/layer3.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14)) with '/layer3/layer3.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 256, 14, 14))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer3/layer3.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer3/layer3.1/relu_1/Relu_output_0 | Stats: mean=0.091701, std-dev=0.14133, var=0.019974, median=0.0013815, min=0 at (0, 0, 0, 0), max=1.6673 at (0, 229, 0, 12), avg-magnitude=0.091701, p90=0.28439, p95=0.37384, p99=0.58937
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer3/layer3.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer3/layer3.1/relu_1/Relu_output_0 | Stats: mean=0.091701, std-dev=0.14133, var=0.019974, median=0.0013815, min=0 at (0, 0, 0, 0), max=1.6673 at (0, 229, 0, 12), avg-magnitude=0.091701, p90=0.28439, p95=0.37384, p99=0.58937
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.167) |      38763 | ########################################
@@ -2187,7 +2187,7 @@
                 (1.17 , 1.33 ) |         22 | 
                 (1.33 , 1.5  ) |          9 | 
                 (1.5  , 1.67 ) |          3 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer3/layer3.1/relu_1/Relu_output_0 | Stats: mean=0.093076, std-dev=0.142, var=0.020164, median=0.0053074, min=0 at (0, 0, 0, 0), max=1.6229 at (0, 229, 0, 12), avg-magnitude=0.093076, p90=0.28595, p95=0.37653, p99=0.58678
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer3/layer3.1/relu_1/Relu_output_0 | Stats: mean=0.093076, std-dev=0.142, var=0.020164, median=0.0053074, min=0 at (0, 0, 0, 0), max=1.6229 at (0, 229, 0, 12), avg-magnitude=0.093076, p90=0.28595, p95=0.37653, p99=0.58678
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.167) |      38611 | ########################################
@@ -2231,7 +2231,7 @@
 [E]         FAILED | Output: '/layer3/layer3.1/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/conv1/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/conv1/Conv_output_0 | Stats: mean=-0.15929, std-dev=0.1794, var=0.032186, median=-0.15565, min=-0.94427 at (0, 326, 2, 4), max=0.83534 at (0, 22, 0, 6), avg-magnitude=0.19352, p90=0.058435, p95=0.11925, p99=0.26524
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/conv1/Conv_output_0 | Stats: mean=-0.15929, std-dev=0.1794, var=0.032186, median=-0.15565, min=-0.94427 at (0, 326, 2, 4), max=0.83534 at (0, 22, 0, 6), avg-magnitude=0.19352, p90=0.058435, p95=0.11925, p99=0.26524
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-0.944 , -0.766 ) |         34 | 
@@ -2244,7 +2244,7 @@
                 (0.306  , 0.484  ) |        128 | 
                 (0.484  , 0.663  ) |         25 | 
                 (0.663  , 0.841  ) |         13 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/conv1/Conv_output_0 | Stats: mean=-0.16539, std-dev=0.18263, var=0.033354, median=-0.16245, min=-0.9239 at (0, 326, 2, 4), max=0.84138 at (0, 22, 0, 6), avg-magnitude=0.19929, p90=0.056049, p95=0.1203, p99=0.26664
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/conv1/Conv_output_0 | Stats: mean=-0.16539, std-dev=0.18263, var=0.033354, median=-0.16245, min=-0.9239 at (0, 326, 2, 4), max=0.84138 at (0, 22, 0, 6), avg-magnitude=0.19929, p90=0.056049, p95=0.1203, p99=0.26664
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-0.944 , -0.766 ) |         38 | 
@@ -2288,7 +2288,7 @@
 [E]         FAILED | Output: '/layer4/layer4.0/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/downsample/downsample.0/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.211, std-dev=0.20546, var=0.042214, median=-0.21617, min=-1.3777 at (0, 1, 0, 6), max=1.0493 at (0, 38, 0, 6), avg-magnitude=0.24681, p90=0.020074, p95=0.11533, p99=0.40612
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.211, std-dev=0.20546, var=0.042214, median=-0.21617, min=-1.3777 at (0, 1, 0, 6), max=1.0493 at (0, 38, 0, 6), avg-magnitude=0.24681, p90=0.020074, p95=0.11533, p99=0.40612
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.39 , -1.15 ) |          9 | 
@@ -2301,7 +2301,7 @@
                 (0.326 , 0.572 ) |        261 | 
                 (0.572 , 0.817 ) |         95 | 
                 (0.817 , 1.06  ) |         26 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.2118, std-dev=0.20716, var=0.042917, median=-0.21643, min=-1.3918 at (0, 1, 0, 6), max=1.0628 at (0, 38, 0, 6), avg-magnitude=0.24815, p90=0.020808, p95=0.11238, p99=0.42045
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/downsample/downsample.0/Conv_output_0 | Stats: mean=-0.2118, std-dev=0.20716, var=0.042917, median=-0.21643, min=-1.3918 at (0, 1, 0, 6), max=1.0628 at (0, 38, 0, 6), avg-magnitude=0.24815, p90=0.020808, p95=0.11238, p99=0.42045
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.39 , -1.15 ) |          9 | 
@@ -2345,8 +2345,8 @@
 [E]         FAILED | Output: '/layer4/layer4.0/downsample/downsample.0/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/relu/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/relu/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer4/layer4.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/relu/Relu_output_0 | Stats: mean=0.017114, std-dev=0.054614, var=0.0029827, median=0, min=0 at (0, 0, 0, 0), max=0.83534 at (0, 22, 0, 6), avg-magnitude=0.017114, p90=0.058435, p95=0.11925, p99=0.26524
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer4/layer4.0/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/relu/Relu_output_0 | Stats: mean=0.017114, std-dev=0.054614, var=0.0029827, median=0, min=0 at (0, 0, 0, 0), max=0.83534 at (0, 22, 0, 6), avg-magnitude=0.017114, p90=0.058435, p95=0.11925, p99=0.26524
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0841) |      23207 | ########################################
@@ -2359,7 +2359,7 @@
                 (0.589 , 0.673 ) |          8 | 
                 (0.673 , 0.757 ) |          9 | 
                 (0.757 , 0.841 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/relu/Relu_output_0 | Stats: mean=0.01695, std-dev=0.054924, var=0.0030166, median=0, min=0 at (0, 0, 0, 0), max=0.84138 at (0, 22, 0, 6), avg-magnitude=0.01695, p90=0.056049, p95=0.1203, p99=0.26664
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/relu/Relu_output_0 | Stats: mean=0.01695, std-dev=0.054924, var=0.0030166, median=0, min=0 at (0, 0, 0, 0), max=0.84138 at (0, 22, 0, 6), avg-magnitude=0.01695, p90=0.056049, p95=0.1203, p99=0.26664
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0841) |      23232 | ########################################
@@ -2403,7 +2403,7 @@
 [E]         FAILED | Output: '/layer4/layer4.0/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/conv2/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/conv2/Conv_output_0 | Stats: mean=-0.0060242, std-dev=0.26198, var=0.068635, median=0.0095611, min=-1.8853 at (0, 117, 0, 6), max=1.5007 at (0, 157, 0, 6), avg-magnitude=0.18936, p90=0.27474, p95=0.36799, p99=0.64187
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/conv2/Conv_output_0 | Stats: mean=-0.0060242, std-dev=0.26198, var=0.068635, median=0.0095611, min=-1.8853 at (0, 117, 0, 6), max=1.5007 at (0, 157, 0, 6), avg-magnitude=0.18936, p90=0.27474, p95=0.36799, p99=0.64187
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.91 , -1.57 ) |          2 | 
@@ -2416,7 +2416,7 @@
                 (0.477 , 0.818 ) |        493 | #
                 (0.818 , 1.16  ) |         80 | 
                 (1.16  , 1.5   ) |         24 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/conv2/Conv_output_0 | Stats: mean=-0.012183, std-dev=0.26584, var=0.070672, median=0.002844, min=-1.9111 at (0, 117, 0, 6), max=1.4811 at (0, 157, 0, 6), avg-magnitude=0.19213, p90=0.27432, p95=0.36754, p99=0.64636
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/conv2/Conv_output_0 | Stats: mean=-0.012183, std-dev=0.26584, var=0.070672, median=0.002844, min=-1.9111 at (0, 117, 0, 6), max=1.4811 at (0, 157, 0, 6), avg-magnitude=0.19213, p90=0.27432, p95=0.36754, p99=0.64636
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.91 , -1.57 ) |          3 | 
@@ -2460,7 +2460,7 @@
 [E]         FAILED | Output: '/layer4/layer4.0/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/Add_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/Add_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/Add_output_0 | Stats: mean=-0.21702, std-dev=0.27231, var=0.074154, median=-0.21648, min=-1.6866 at (0, 372, 1, 5), max=1.3567 at (0, 104, 6, 6), avg-magnitude=0.28083, p90=0.11287, p95=0.22146, p99=0.47904
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/Add_output_0 | Stats: mean=-0.21702, std-dev=0.27231, var=0.074154, median=-0.21648, min=-1.6866 at (0, 372, 1, 5), max=1.3567 at (0, 104, 6, 6), avg-magnitude=0.28083, p90=0.11287, p95=0.22146, p99=0.47904
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.69 , -1.38 ) |          4 | 
@@ -2473,7 +2473,7 @@
                 (0.444 , 0.748 ) |        259 | 
                 (0.748 , 1.05  ) |         51 | 
                 (1.05  , 1.36  ) |          6 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/Add_output_0 | Stats: mean=-0.22398, std-dev=0.27578, var=0.076052, median=-0.22438, min=-1.6506 at (0, 372, 1, 5), max=1.3432 at (0, 104, 6, 6), avg-magnitude=0.28736, p90=0.11019, p95=0.22242, p99=0.47819
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/Add_output_0 | Stats: mean=-0.22398, std-dev=0.27578, var=0.076052, median=-0.22438, min=-1.6506 at (0, 372, 1, 5), max=1.3432 at (0, 104, 6, 6), avg-magnitude=0.28736, p90=0.11019, p95=0.22242, p99=0.47819
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.69 , -1.38 ) |          7 | 
@@ -2517,8 +2517,8 @@
 [E]         FAILED | Output: '/layer4/layer4.0/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.0/relu_1/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer4/layer4.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.0/relu_1/Relu_output_0 | Stats: mean=0.031904, std-dev=0.096669, var=0.0093448, median=0, min=0 at (0, 0, 0, 0), max=1.3567 at (0, 104, 6, 6), avg-magnitude=0.031904, p90=0.11287, p95=0.22146, p99=0.47904
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer4/layer4.0/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.0/relu_1/Relu_output_0 | Stats: mean=0.031904, std-dev=0.096669, var=0.0093448, median=0, min=0 at (0, 0, 0, 0), max=1.3567 at (0, 104, 6, 6), avg-magnitude=0.031904, p90=0.11287, p95=0.22146, p99=0.47904
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.136) |      22906 | ########################################
@@ -2531,7 +2531,7 @@
                 (0.95 , 1.09 ) |         10 | 
                 (1.09 , 1.22 ) |          4 | 
                 (1.22 , 1.36 ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.0/relu_1/Relu_output_0 | Stats: mean=0.031687, std-dev=0.096865, var=0.0093828, median=0, min=0 at (0, 0, 0, 0), max=1.3432 at (0, 104, 6, 6), avg-magnitude=0.031687, p90=0.11019, p95=0.22242, p99=0.47819
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.0/relu_1/Relu_output_0 | Stats: mean=0.031687, std-dev=0.096865, var=0.0093828, median=0, min=0 at (0, 0, 0, 0), max=1.3432 at (0, 104, 6, 6), avg-magnitude=0.031687, p90=0.11019, p95=0.22242, p99=0.47819
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.136) |      22940 | ########################################
@@ -2575,7 +2575,7 @@
 [E]         FAILED | Output: '/layer4/layer4.0/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.1/conv1/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.1/conv1/Conv_output_0 | Stats: mean=-0.12505, std-dev=0.17103, var=0.029251, median=-0.12058, min=-1.0502 at (0, 24, 1, 5), max=0.52657 at (0, 84, 6, 6), avg-magnitude=0.16865, p90=0.088985, p95=0.14763, p99=0.25898
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.1/conv1/Conv_output_0 | Stats: mean=-0.12505, std-dev=0.17103, var=0.029251, median=-0.12058, min=-1.0502 at (0, 24, 1, 5), max=0.52657 at (0, 84, 6, 6), avg-magnitude=0.16865, p90=0.088985, p95=0.14763, p99=0.25898
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.05 , -0.893) |          5 | 
@@ -2588,7 +2588,7 @@
                 (0.0535, 0.211 ) |       3044 | ##############
                 (0.211 , 0.369 ) |        508 | ##
                 (0.369 , 0.527 ) |         30 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.1/conv1/Conv_output_0 | Stats: mean=-0.13135, std-dev=0.17337, var=0.030057, median=-0.12696, min=-1.0499 at (0, 24, 1, 5), max=0.51768 at (0, 84, 6, 6), avg-magnitude=0.17338, p90=0.084578, p95=0.14496, p99=0.25929
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.1/conv1/Conv_output_0 | Stats: mean=-0.13135, std-dev=0.17337, var=0.030057, median=-0.12696, min=-1.0499 at (0, 24, 1, 5), max=0.51768 at (0, 84, 6, 6), avg-magnitude=0.17338, p90=0.084578, p95=0.14496, p99=0.25929
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-1.05 , -0.893) |          5 | 
@@ -2632,8 +2632,8 @@
 [E]         FAILED | Output: '/layer4/layer4.1/conv1/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.1/relu/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.1/relu/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer4/layer4.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.1/relu/Relu_output_0 | Stats: mean=0.021798, std-dev=0.054845, var=0.0030079, median=0, min=0 at (0, 0, 0, 1), max=0.52657 at (0, 84, 6, 6), avg-magnitude=0.021798, p90=0.088985, p95=0.14763, p99=0.25898
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer4/layer4.1/relu/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.1/relu/Relu_output_0 | Stats: mean=0.021798, std-dev=0.054845, var=0.0030079, median=0, min=0 at (0, 0, 0, 1), max=0.52657 at (0, 84, 6, 6), avg-magnitude=0.021798, p90=0.088985, p95=0.14763, p99=0.25898
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0527) |      21463 | ########################################
@@ -2646,7 +2646,7 @@
                 (0.369 , 0.421 ) |         23 | 
                 (0.421 , 0.474 ) |          5 | 
                 (0.474 , 0.527 ) |          3 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.1/relu/Relu_output_0 | Stats: mean=0.021013, std-dev=0.054014, var=0.0029175, median=0, min=0 at (0, 0, 0, 1), max=0.51768 at (0, 84, 6, 6), avg-magnitude=0.021013, p90=0.084578, p95=0.14496, p99=0.25929
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.1/relu/Relu_output_0 | Stats: mean=0.021013, std-dev=0.054014, var=0.0029175, median=0, min=0 at (0, 0, 0, 1), max=0.51768 at (0, 84, 6, 6), avg-magnitude=0.021013, p90=0.084578, p95=0.14496, p99=0.25929
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (0     , 0.0527) |      21615 | ########################################
@@ -2690,7 +2690,7 @@
 [E]         FAILED | Output: '/layer4/layer4.1/relu/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.1/conv2/Conv_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.1/conv2/Conv_output_0 | Stats: mean=-0.3607, std-dev=0.9624, var=0.92621, median=-0.48613, min=-4.056 at (0, 21, 5, 5), max=8.5769 at (0, 104, 5, 5), avg-magnitude=0.79814, p90=0.75351, p95=1.3027, p99=2.8681
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.1/conv2/Conv_output_0 | Stats: mean=-0.3607, std-dev=0.9624, var=0.92621, median=-0.48613, min=-4.056 at (0, 21, 5, 5), max=8.5769 at (0, 104, 5, 5), avg-magnitude=0.79814, p90=0.75351, p95=1.3027, p99=2.8681
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.06 , -2.76 ) |         56 | 
@@ -2703,7 +2703,7 @@
                 (4.99  , 6.28  ) |         40 | 
                 (6.28  , 7.57  ) |          6 | 
                 (7.57  , 8.87  ) |          2 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.1/conv2/Conv_output_0 | Stats: mean=-0.34186, std-dev=0.93973, var=0.8831, median=-0.46897, min=-3.7004 at (0, 21, 5, 5), max=8.8673 at (0, 104, 5, 5), avg-magnitude=0.77415, p90=0.75173, p95=1.2791, p99=2.8009
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.1/conv2/Conv_output_0 | Stats: mean=-0.34186, std-dev=0.93973, var=0.8831, median=-0.46897, min=-3.7004 at (0, 21, 5, 5), max=8.8673 at (0, 104, 5, 5), avg-magnitude=0.77415, p90=0.75173, p95=1.2791, p99=2.8009
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.06 , -2.76 ) |         39 | 
@@ -2747,7 +2747,7 @@
 [E]         FAILED | Output: '/layer4/layer4.1/conv2/Conv_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.1/Add_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.1/Add_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.1/Add_output_0 | Stats: mean=-0.3288, std-dev=0.99846, var=0.99693, median=-0.46467, min=-4.056 at (0, 21, 5, 5), max=8.9367 at (0, 104, 5, 5), avg-magnitude=0.80433, p90=0.81738, p95=1.4087, p99=3.1094
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.1/Add_output_0 | Stats: mean=-0.3288, std-dev=0.99846, var=0.99693, median=-0.46467, min=-4.056 at (0, 21, 5, 5), max=8.9367 at (0, 104, 5, 5), avg-magnitude=0.80433, p90=0.81738, p95=1.4087, p99=3.1094
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-4.06  , -2.73  ) |         63 | 
@@ -2760,7 +2760,7 @@
                 (5.21   , 6.53   ) |         46 | 
                 (6.53   , 7.86   ) |         10 | 
                 (7.86   , 9.18   ) |          4 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.1/Add_output_0 | Stats: mean=-0.31017, std-dev=0.97727, var=0.95505, median=-0.44556, min=-3.7004 at (0, 21, 5, 5), max=9.1826 at (0, 104, 5, 5), avg-magnitude=0.78059, p90=0.81126, p95=1.3694, p99=3.0113
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.1/Add_output_0 | Stats: mean=-0.31017, std-dev=0.97727, var=0.95505, median=-0.44556, min=-3.7004 at (0, 21, 5, 5), max=9.1826 at (0, 104, 5, 5), avg-magnitude=0.78059, p90=0.81126, p95=1.3694, p99=3.0113
 [I]             ---- Histogram ----
                 Bin Range          |  Num Elems | Visualization
                 (-4.06  , -2.73  ) |         42 | 
@@ -2804,8 +2804,8 @@
 [E]         FAILED | Output: '/layer4/layer4.1/Add_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/layer4/layer4.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7)) with '/layer4/layer4.1/relu_1/Relu_output_0' (dtype=float32, shape=(1, 512, 7, 7))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /layer4/layer4.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /layer4/layer4.1/relu_1/Relu_output_0 | Stats: mean=0.23777, std-dev=0.63844, var=0.40761, median=0, min=0 at (0, 0, 0, 0), max=8.9367 at (0, 104, 5, 5), avg-magnitude=0.23777, p90=0.81738, p95=1.4087, p99=3.1094
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /layer4/layer4.1/relu_1/Relu_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /layer4/layer4.1/relu_1/Relu_output_0 | Stats: mean=0.23777, std-dev=0.63844, var=0.40761, median=0, min=0 at (0, 0, 0, 0), max=8.9367 at (0, 104, 5, 5), avg-magnitude=0.23777, p90=0.81738, p95=1.4087, p99=3.1094
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.918) |      22852 | ########################################
@@ -2818,7 +2818,7 @@
                 (6.43 , 7.35 ) |         12 | 
                 (7.35 , 8.26 ) |          3 | 
                 (8.26 , 9.18 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /layer4/layer4.1/relu_1/Relu_output_0 | Stats: mean=0.23521, std-dev=0.63596, var=0.40445, median=0, min=0 at (0, 0, 0, 0), max=9.1826 at (0, 104, 5, 5), avg-magnitude=0.23521, p90=0.81126, p95=1.3694, p99=3.0113
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /layer4/layer4.1/relu_1/Relu_output_0 | Stats: mean=0.23521, std-dev=0.63596, var=0.40445, median=0, min=0 at (0, 0, 0, 0), max=9.1826 at (0, 104, 5, 5), avg-magnitude=0.23521, p90=0.81126, p95=1.3694, p99=3.0113
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.918) |      22912 | ########################################
@@ -2862,8 +2862,8 @@
 [E]         FAILED | Output: '/layer4/layer4.1/relu_1/Relu_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/avgpool/GlobalAveragePool_output_0' (dtype=float32, shape=(1, 512, 1, 1)) with '/avgpool/GlobalAveragePool_output_0' (dtype=float32, shape=(1, 512, 1, 1))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /avgpool/GlobalAveragePool_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /avgpool/GlobalAveragePool_output_0 | Stats: mean=0.23777, std-dev=0.55877, var=0.31223, median=0.034811, min=0 at (0, 2, 0, 0), max=5.8352 at (0, 104, 0, 0), avg-magnitude=0.23777, p90=0.69397, p95=1.2319, p99=2.4271
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /avgpool/GlobalAveragePool_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /avgpool/GlobalAveragePool_output_0 | Stats: mean=0.23777, std-dev=0.55877, var=0.31223, median=0.034811, min=0 at (0, 2, 0, 0), max=5.8352 at (0, 104, 0, 0), avg-magnitude=0.23777, p90=0.69397, p95=1.2319, p99=2.4271
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.604) |        456 | ########################################
@@ -2876,7 +2876,7 @@
                 (4.23 , 4.84 ) |          0 | 
                 (4.84 , 5.44 ) |          1 | 
                 (5.44 , 6.04 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /avgpool/GlobalAveragePool_output_0 | Stats: mean=0.23521, std-dev=0.56181, var=0.31563, median=0.037801, min=0 at (0, 5, 0, 0), max=6.0446 at (0, 104, 0, 0), avg-magnitude=0.23521, p90=0.70009, p95=1.2997, p99=2.3763
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /avgpool/GlobalAveragePool_output_0 | Stats: mean=0.23521, std-dev=0.56181, var=0.31563, median=0.037801, min=0 at (0, 5, 0, 0), max=6.0446 at (0, 104, 0, 0), avg-magnitude=0.23521, p90=0.70009, p95=1.2997, p99=2.3763
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.604) |        455 | ########################################
@@ -2920,8 +2920,8 @@
 [E]         FAILED | Output: '/avgpool/GlobalAveragePool_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: '/Flatten_output_0' (dtype=float32, shape=(1, 512)) with '/Flatten_output_0' (dtype=float32, shape=(1, 512))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[W]         onnxrt-runner-N0-08/03/26-10:20:35  | Output: /Flatten_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: /Flatten_output_0 | Stats: mean=0.23777, std-dev=0.55877, var=0.31223, median=0.034811, min=0 at (0, 2), max=5.8352 at (0, 104), avg-magnitude=0.23777, p90=0.69397, p95=1.2319, p99=2.4271
+[W]         onnxrt-runner-N0-08/03/26-13:59:55  | Output: /Flatten_output_0: Some values are 0. Will add a small epsilon quantity to these when computing relative difference. Note that this may cause some relative differences to be extremely high. 
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: /Flatten_output_0 | Stats: mean=0.23777, std-dev=0.55877, var=0.31223, median=0.034811, min=0 at (0, 2), max=5.8352 at (0, 104), avg-magnitude=0.23777, p90=0.69397, p95=1.2319, p99=2.4271
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.604) |        456 | ########################################
@@ -2934,7 +2934,7 @@
                 (4.23 , 4.84 ) |          0 | 
                 (4.84 , 5.44 ) |          1 | 
                 (5.44 , 6.04 ) |          1 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: /Flatten_output_0 | Stats: mean=0.23521, std-dev=0.56181, var=0.31563, median=0.037801, min=0 at (0, 5), max=6.0446 at (0, 104), avg-magnitude=0.23521, p90=0.70009, p95=1.2997, p99=2.3763
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: /Flatten_output_0 | Stats: mean=0.23521, std-dev=0.56181, var=0.31563, median=0.037801, min=0 at (0, 5), max=6.0446 at (0, 104), avg-magnitude=0.23521, p90=0.70009, p95=1.2997, p99=2.3763
 [I]             ---- Histogram ----
                 Bin Range      |  Num Elems | Visualization
                 (0    , 0.604) |        455 | ########################################
@@ -2978,7 +2978,7 @@
 [E]         FAILED | Output: '/Flatten_output_0' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(1, 1000))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:39: output | Stats: mean=-9.4261e-05, std-dev=1.412, var=1.9937, median=-0.085078, min=-3.9919 at (0, 476), max=5.2298 at (0, 111), avg-magnitude=1.1203, p90=1.7999, p95=2.4201, p99=3.4196
+[I]         onnxrt-runner-N0-08/03/26-13:59:59: output | Stats: mean=-9.4261e-05, std-dev=1.412, var=1.9937, median=-0.085078, min=-3.9919 at (0, 476), max=5.2298 at (0, 111), avg-magnitude=1.1203, p90=1.7999, p95=2.4201, p99=3.4196
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.11 , -3.18 ) |         10 | #
@@ -2991,7 +2991,7 @@
                 (2.43  , 3.36  ) |         37 | #####
                 (3.36  , 4.3   ) |          8 | #
                 (4.3   , 5.23  ) |          4 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:35: output | Stats: mean=8.1253e-06, std-dev=1.4193, var=2.0144, median=-0.096946, min=-4.1115 at (0, 865), max=5.2154 at (0, 111), avg-magnitude=1.1274, p90=1.8424, p95=2.4495, p99=3.5604
+[I]         onnxrt-runner-N0-08/03/26-13:59:55: output | Stats: mean=8.1253e-06, std-dev=1.4193, var=2.0144, median=-0.096946, min=-4.1115 at (0, 865), max=5.2154 at (0, 111), avg-magnitude=1.1274, p90=1.8424, p95=2.4495, p99=3.5604
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.11 , -3.18 ) |         10 | #
@@ -3083,5 +3083,5 @@
     Average Metrics | /avgpool/GlobalAveragePool_output_0: max_absdiff=0.43582 (n=1), max_reldiff=6.1411e+13 (n=1), mean_absdiff=0.030723 (n=1), mean_reldiff=6.5142e+11 (n=1), median_absdiff=0.010023 (n=1), median_reldiff=0.19864 (n=1)
     Average Metrics | /Flatten_output_0: max_absdiff=0.43582 (n=1), max_reldiff=6.1411e+13 (n=1), mean_absdiff=0.030723 (n=1), mean_reldiff=6.5142e+11 (n=1), median_absdiff=0.010023 (n=1), median_reldiff=0.19864 (n=1)
     Average Metrics | output: max_absdiff=0.59903 (n=1), max_reldiff=140.78 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48433 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090547 (n=1)
-    Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:39 vs. onnxrt-runner-N0-08/03/26-10:20:35 | Passed: 0/1 iterations | Pass Rate: 0.0%
-[E] FAILED | Runtime: 2.983s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --onnx-outputs mark all --load-inputs artifacts/_divergence_work/layerwise_inputs.json --load-outputs artifacts/_divergence_work/layerwise_fp32_outputs.json
+    Accuracy Summary | onnxrt-runner-N0-08/03/26-13:59:59 vs. onnxrt-runner-N0-08/03/26-13:59:55 | Passed: 0/1 iterations | Pass Rate: 0.0%
+[E] FAILED | Runtime: 3.051s | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --onnx-outputs mark all --load-inputs artifacts/_divergence_work/layerwise_inputs.json --load-outputs artifacts/_divergence_work/layerwise_fp32_outputs.json

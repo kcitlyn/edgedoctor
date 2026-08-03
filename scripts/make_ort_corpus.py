@@ -47,6 +47,9 @@ import sys
 import textwrap
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _corpus_paths import scrub_log  # noqa: E402
+
 # The child-process driver. ORT's verbose log goes to the process's stderr from
 # C++, so it cannot be captured from inside the same process with contextlib
 # redirects — it has to be a subprocess with stderr redirected at the OS level.
@@ -79,7 +82,12 @@ def _run_session(model: Path, providers: list[str], log_path: Path) -> int:
     print(f"  $ python -c <driver> {model.name} {','.join(providers)}")
     with log_path.open("w") as fh:
         proc = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, text=True)
-    print(f"    -> {log_path}  (exit {proc.returncode})")
+    # Mask this machine's absolute paths. Done at capture time so committed logs
+    # are portable by construction; preserves line numbers, which edgedoctor
+    # cites. See scripts/_corpus_paths.py.
+    changed = scrub_log(log_path)
+    print(f"    -> {log_path}  (exit {proc.returncode}"
+          f"{f', {changed} line(s) path-normalized' if changed else ''})")
     return proc.returncode
 
 

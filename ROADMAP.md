@@ -45,7 +45,8 @@ along and runs it.
       degrades to rules-only on any failure). Opt-in `--llm`; sees only
       unmatched facts; ungrounded citations are dropped, not shown; output
       marked `origin=llm` and capped below `high` confidence.
-      *Not yet exercised against the live API — hermetic tests only.*
+      SDK wire contract verified offline (real SDK + mock transport);
+      live *model behaviour* still unverified — see tests/test_llm_live.py.
 - **Done =** a 30-second demo: broken model in → cryptic log → 3 plain-English
   sentences + a fix. *(Works today on fixture logs — needs real-log validation.)*
 
