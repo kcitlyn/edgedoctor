@@ -20,6 +20,7 @@ from .base import Backend
 PARSER_REGISTRY: dict[str, str] = {
     "tensorrt": "tensorrt:TensorRTBackend",
     "polygraphy": "polygraphy:PolygraphyBackend",
+    "onnxruntime": "onnxruntime:OnnxRuntimeBackend",
 }
 
 

@@ -8,9 +8,13 @@ built and tested against, and (later) the seed of the reference benchmark.
 ```
 corpus/
   tensorrt/          trtexec / Polygraphy logs from the ThinkPad (RTX 500 Ada)
-  onnxruntime/       Polygraphy accuracy-divergence logs (ORT runner, CPU),
-                     generated on the Mac by scripts/make_divergence_corpus.py;
-                     later, ORT verbose logs + profiling JSON from the Pi 5
+  onnxruntime/       two families, both generated on the Mac:
+                       int8_*/fp32_*/nan_*/shape_*  Polygraphy accuracy-
+                         divergence logs (make_divergence_corpus.py)
+                       ort_*                        ORT verbose session logs
+                         showing EP placement / CPU fallback
+                         (make_ort_corpus.py) — the same parser handles the
+                         Pi 5's logs, which is why it's built here first
   <backend>/         one directory per backend as they come online
 ```
 

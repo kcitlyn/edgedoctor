@@ -85,10 +85,21 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
         # Gather evidence: required kinds, plus any optional kinds that happen
         # to be present. Required facts come first so the report shows the
         # proof before the supporting measurements.
-        optional = set(rule.get("optional", []))
+        #
+        # `optional` is ordered by the rule author, and that order is preserved:
+        # the report caps how many evidence blocks it prints, so the most
+        # actionable fact must be citable first. (A rule listing the ops that
+        # fell back before the raw placement counts gets the ops shown.)
+        #
+        # Deduplicated because a kind may legitimately appear in both lists, and
+        # showing the user the same log line twice looks like a bug in the tool.
+        optional = list(dict.fromkeys(rule.get("optional", [])))
         evidence_facts = [f for f in facts.facts if f.kind in required]
-        evidence_facts += [f for f in facts.facts if f.kind in optional]
-        evidence_ids = [f.id for f in evidence_facts]
+        for kind in optional:
+            if kind in required:
+                continue
+            evidence_facts += [f for f in facts.facts if f.kind == kind]
+        evidence_ids = list(dict.fromkeys(f.id for f in evidence_facts))
 
         # Build a placeholder dict from the matched facts' data fields.
         # First fact of each kind wins for placeholder resolution.
