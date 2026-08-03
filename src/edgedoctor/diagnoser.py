@@ -13,6 +13,7 @@ It will import this module's results, not replace them.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -26,13 +27,66 @@ RULES_DIR = Path(__file__).parent / "rules"
 
 
 def _load_rules(backend: str) -> list[dict[str, Any]]:
-    """Load the YAML rule file for a backend. Returns [] if none exists."""
-    path = RULES_DIR / f"{backend}.yaml"
-    if not path.exists():
+    """Load the YAML rule file for a backend. Returns [] if unusable.
+
+    Rule files are hand-edited data, so malformed content is a realistic
+    mistake — not a "can't happen". This function is deliberately defensive on
+    three axes, because a diagnostic tool that crashes while explaining a crash
+    is worse than useless:
+
+      - Unparseable YAML yields [] rather than propagating yaml's ParserError.
+      - A document that isn't a list of mappings yields [], and non-mapping
+        entries are dropped individually, so one bad rule can't take out the
+        file.
+      - `backend` is validated as a bare name, so it can't traverse out of
+        RULES_DIR (a Facts object could in principle carry `backend`
+        "../../etc/passwd"; parsers set it, but nothing structurally stopped a
+        crafted Facts JSON from reaching here via a future --load path).
+
+    A malformed rule file therefore degrades to "no rules for this backend",
+    which the caller already handles honestly as "no known pattern matched".
+    """
+    # Reject anything that isn't a simple identifier-ish name before touching
+    # the filesystem. os.path.basename would not be enough: an absolute path
+    # would still escape.
+    if not backend or not re.fullmatch(r"[A-Za-z0-9_.-]+", backend):
         return []
-    with path.open() as f:
-        rules = yaml.safe_load(f)
-    return rules if isinstance(rules, list) else []
+    if backend in (".", ".."):
+        return []
+
+    path = RULES_DIR / f"{backend}.yaml"
+    try:
+        if not path.is_file():
+            return []
+        with path.open() as f:
+            rules = yaml.safe_load(f)
+    except (OSError, yaml.YAMLError):
+        # Unreadable or unparseable: no rules, no traceback.
+        return []
+    if not isinstance(rules, list):
+        return []
+    # Drop non-mapping entries rather than crashing on rule.get() later.
+    return [r for r in rules if isinstance(r, dict)]
+
+
+def _str_list(value: Any) -> list[str]:
+    """Coerce a rule field to a list of strings, tolerating hand-edit slips.
+
+    A bare string is wrapped, NOT iterated. This is the subtle one:
+    `requires: k` (missing brackets) previously became `set("k") == {"k"}`,
+    which happened to work for a one-character kind and silently matched the
+    WRONG thing for any real multi-character kind — `requires: cpu_fallback`
+    would become {'c','p','u','_',...} and match a fact of kind "c". A silent
+    mismatch in rule matching is exactly the class of bug this tool exists to
+    avoid, so it's normalized here instead.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list | tuple | set):
+        return [str(v) for v in value]
+    return []
 
 
 # ── Matching engine ───────────────────────────────────────────────────────
@@ -64,7 +118,10 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
     results: list[Diagnosis] = []
 
     for rule in rules:
-        required = set(rule.get("requires", []))
+        # _str_list, not set(...): a hand-edited `requires: cpu_fallback`
+        # (missing brackets) would otherwise become a set of CHARACTERS and
+        # silently match the wrong fact kind. See _str_list.
+        required = set(_str_list(rule.get("requires")))
         if not required:
             continue
         if not required.issubset(fact_kinds_present):
@@ -72,14 +129,19 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
 
         # Disqualifying context: any of these present means this rule is the
         # wrong explanation, regardless of what else matched.
-        forbidden = set(rule.get("absent", []))
+        forbidden = set(_str_list(rule.get("absent")))
         if forbidden & fact_kinds_present:
             continue
 
         # Numeric thresholds on a fact's data field. Needed because presence
         # alone can't distinguish "one output diverged" from "forty-nine did",
         # and those warrant different explanations.
-        if not _conditions_met(rule.get("conditions", []), facts):
+        conditions = rule.get("conditions")
+        if not isinstance(conditions, list):
+            # A malformed `conditions:` must not silently disable the gate it
+            # was written to enforce, so treat it as unsatisfiable.
+            conditions = [] if conditions is None else [conditions]
+        if not _conditions_met(conditions, facts):
             continue
 
         # Gather evidence: required kinds, plus any optional kinds that happen
@@ -93,7 +155,7 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
         #
         # Deduplicated because a kind may legitimately appear in both lists, and
         # showing the user the same log line twice looks like a bug in the tool.
-        optional = list(dict.fromkeys(rule.get("optional", [])))
+        optional = list(dict.fromkeys(_str_list(rule.get("optional"))))
         evidence_facts = [f for f in facts.facts if f.kind in required]
         for kind in optional:
             if kind in required:
@@ -109,7 +171,9 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
                 placeholders.setdefault(k, str(v))
 
         # Render the message template with available placeholders.
-        message = rule.get("message", "")
+        message = rule.get("message") or ""
+        if not isinstance(message, str):
+            message = str(message)
         try:
             message = message.format_map(
                 _SafeDict(placeholders)
@@ -117,13 +181,19 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
         except (KeyError, ValueError):
             pass  # template had a placeholder we can't fill — leave it
 
+        # Only mapping-shaped suggestions are usable; a bare string (a common
+        # hand-edit slip) is skipped rather than crashing the whole diagnosis.
+        raw_suggestions = rule.get("suggestions")
+        if not isinstance(raw_suggestions, list):
+            raw_suggestions = []
         suggestions = [
             Suggestion(
-                summary=s.get("summary", ""),
-                command=s.get("command", ""),
-                applicability=s.get("applicability", "maybe-incorrect"),
+                summary=str(s.get("summary", "")),
+                command=str(s.get("command", "")),
+                applicability=str(s.get("applicability", "maybe-incorrect")),
             )
-            for s in rule.get("suggestions", [])
+            for s in raw_suggestions
+            if isinstance(s, dict)
         ]
 
         results.append(
@@ -155,10 +225,21 @@ def _conditions_met(conditions: list[dict[str, Any]], facts: Facts) -> bool:
     bound(s). A condition whose fact/field is missing or non-numeric FAILS —
     a rule may never fire on evidence that isn't actually there. Supported
     bounds: `min` (>=) and `max` (<=).
+
+    A MALFORMED CONDITION ALSO FAILS, rather than raising. A rule file is
+    hand-edited data, so a typo (`min: "two"`) is a realistic mistake; letting
+    it crash the whole diagnosis would take down every OTHER rule's correct
+    output alongside it. Failing closed means the buggy rule stays silent and
+    the rest of the report still reaches the user.
     """
     for cond in conditions:
+        if not isinstance(cond, dict):
+            return False
         kind = cond.get("kind")
         field = cond.get("field")
+        if kind is None or field is None:
+            # An underspecified condition can't be checked, so it isn't met.
+            return False
         lo, hi = cond.get("min"), cond.get("max")
         if not any(
             _satisfies(f.data.get(field), lo, hi)
@@ -170,14 +251,33 @@ def _conditions_met(conditions: list[dict[str, Any]], facts: Facts) -> bool:
 
 
 def _satisfies(value: Any, lo: Any, hi: Any) -> bool:
-    """True if `value` is numeric and within the [lo, hi] bounds given."""
+    """True if `value` is a finite number within the [lo, hi] bounds given.
+
+    Two non-obvious guards:
+
+    NaN is rejected. Comparisons against NaN are all False, so a naive
+    `if num < lo: return False` lets NaN through EVERY threshold — a NaN
+    measurement would satisfy "at least 50%" and "at most 10%" simultaneously.
+    Infinity is rejected for the same reason in reverse: it satisfies any `min`,
+    so an unparsed sentinel could trip a threshold it has no business tripping.
+
+    A non-numeric BOUND (from a typo in a rule file) makes the condition fail
+    rather than raise — see _conditions_met.
+    """
     try:
         num = float(value)
     except (TypeError, ValueError):
         return False
-    if lo is not None and num < float(lo):
+    # NaN and +/-inf are not measurements a threshold can meaningfully bound.
+    if num != num or num in (float("inf"), float("-inf")):
         return False
-    if hi is not None and num > float(hi):
+    try:
+        if lo is not None and num < float(lo):
+            return False
+        if hi is not None and num > float(hi):
+            return False
+    except (TypeError, ValueError):
+        # Malformed bound in the rule file: fail closed, don't crash the run.
         return False
     return True
 

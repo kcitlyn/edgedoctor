@@ -45,6 +45,11 @@ MAX_TOKENS = 2048
 MAX_LLM_CONFIDENCE = "medium"
 _CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
 
+#: Most suggestions a synthesized diagnosis may contribute. A model asked for
+#: fixes will happily produce fifteen; past the first few they are padding, and
+#: they push the curated rules' advice off screen.
+MAX_LLM_SUGGESTIONS = 4
+
 
 class SynthesizedSuggestion(BaseModel):
     """A remediation proposed by the model."""
@@ -195,6 +200,10 @@ def _ground(
         cited = set(d.evidence)
         if not cited or not cited.issubset(valid_ids):
             continue
+        # A diagnosis with no headline would render as a blank "error[ED9001]:"
+        # line — worse than no diagnosis, because it looks like the tool broke.
+        if not d.message.strip():
+            continue
         grounded.append(
             Diagnosis(
                 # No ED code: those are reserved for curated rules. An LLM
@@ -212,7 +221,11 @@ def _ground(
                         # command must not be run unattended by an agent.
                         applicability="maybe-incorrect",
                     )
-                    for s in d.suggestions
+                    # Capped: a model can emit dozens of suggestions, and a wall
+                    # of generated advice buries the curated rules' advice below
+                    # it. Keeping the first few preserves the useful ones.
+                    for s in d.suggestions[:MAX_LLM_SUGGESTIONS]
+                    if s.summary.strip()
                 ],
                 evidence=sorted(cited),
                 confidence=_clamp_confidence("medium"),

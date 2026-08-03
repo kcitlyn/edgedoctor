@@ -15,6 +15,7 @@ Output discipline (per clig.dev):
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 from pathlib import Path
 
@@ -86,6 +87,36 @@ def _app_callback(
     """The universal, cross-vendor edge-AI deployment diagnostician."""
 
 
+def _require_readable_file(artifact: Path) -> None:
+    """Exit 1 with a clean message unless `artifact` is a readable file.
+
+    Checked explicitly rather than relying on the later read_text(): passing a
+    directory used to surface a raw IsADirectoryError traceback, which violates
+    the tool's own output discipline (errors belong on stderr as one line, and a
+    traceback tells a user nothing actionable). A path that exists but is not a
+    regular file — a directory, a device node, a broken symlink — is a usage
+    error, not a tool crash.
+    """
+    if artifact.is_dir():
+        err.print(f"[red]error:[/red] {artifact} is a directory, not a log file")
+        raise typer.Exit(code=1)
+    if not artifact.exists():
+        # Covers both a missing path and a dangling symlink, since exists()
+        # follows links.
+        err.print(f"[red]error:[/red] file not found: {artifact}")
+        raise typer.Exit(code=1)
+    if not artifact.is_file():
+        err.print(f"[red]error:[/red] {artifact} is not a regular file")
+        raise typer.Exit(code=1)
+    if not os.access(artifact, os.R_OK):
+        # A readable check here keeps the "1 = usage error" contract: without
+        # it, read_text() raises PermissionError, which surfaces as exit 2 —
+        # the code reserved for "errors found in the log". A file we can't open
+        # is a usage problem, not a diagnosis result.
+        err.print(f"[red]error:[/red] cannot read {artifact} (permission denied)")
+        raise typer.Exit(code=1)
+
+
 @app.command()
 def diagnose(
     artifact: Path = typer.Argument(
@@ -127,9 +158,7 @@ def diagnose(
         err.print("   See ROADMAP.md for what's now / next / later.")
         raise typer.Exit(code=1)
 
-    if not artifact.exists():
-        err.print(f"[red]error:[/red] file not found: {artifact}")
-        raise typer.Exit(code=1)
+    _require_readable_file(artifact)
 
     # 1. Parse
     facts = get_parser(backend.value).parse(artifact)
@@ -191,9 +220,7 @@ def parse(
     This is the deterministic first stage of diagnosis, exposed directly so
     you can inspect exactly what the parser saw — every fact cites file:line.
     """
-    if not artifact.exists():
-        err.print(f"[red]error:[/red] file not found: {artifact}")
-        raise typer.Exit(code=1)
+    _require_readable_file(artifact)
 
     if backend.value not in PARSER_REGISTRY:
         err.print(f"[red]error:[/red] no parser for '{backend.value}' yet — see ROADMAP.md")
