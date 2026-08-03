@@ -110,6 +110,14 @@ class Diagnosis(BaseModel):
     )
     confidence: str = Field(default="low", description="'high' | 'medium' | 'low'")
     insufficient_info: bool = False
+    origin: str = Field(
+        default="rules",
+        description="'rules' = matched a curated, human-reviewed rule; "
+        "'llm' = synthesized from facts no rule covered. Defaults to 'rules' "
+        "so the deterministic path and every existing snapshot are unaffected. "
+        "A user must always be able to tell a reviewed diagnosis from a "
+        "generated one, so this is surfaced in the report.",
+    )
 
 
 class Backend(ABC):
