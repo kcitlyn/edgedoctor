@@ -46,7 +46,7 @@ no API key). Honest state of the build:
 | PyTorch → ONNX export + verification scripts | ✅ works        |
 | Accuracy divergence (FP32 vs INT8)           | ✅ works (real corpus) |
 | Validation against real-hardware logs        | 🔜 in progress  |
-| Optional grounded LLM synthesis layer        | 🔜 next         |
+| Optional grounded LLM synthesis layer (`--llm`) | ✅ works (untested vs live API) |
 | ONNX Runtime backend (2nd vendor)            | 🗺️ planned (Aug) |
 | CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
 | MCP server surface                           | 🗺️ planned      |
@@ -88,6 +88,31 @@ agents. Exit codes: `0` clean · `2` errors found · `3` warnings only.
 > Every claim is traceable to a parsed log line — the evidence block shows your
 > own log, verbatim. If edgedoctor doesn't have the evidence, it says so — it
 > does **not** guess.
+
+---
+
+## The optional LLM layer (`--llm`)
+
+Everything above works with no API key. `--llm` opts into an extra pass that
+tries to explain facts **no rule matched** — and it is built so that it cannot
+degrade what the rules already give you:
+
+| Guarantee | How it's enforced |
+| --- | --- |
+| Cannot contradict a curated rule | It only ever receives the *unmatched* facts, so it can't revisit covered ground |
+| Cannot invent evidence | It sees parsed `Facts`, never the raw log. Any diagnosis citing a fact id that wasn't in its input is **dropped, not displayed** |
+| Cannot pose as a reviewed rule | Marked `(synthesized)` in the report and `origin: "llm"` in `--json`; capped below `high` confidence; reserved `ED9001` code; its suggestions are never `machine-applicable` |
+| Cannot break the tool | Missing SDK, missing key, timeout, malformed response → zero synthesized diagnoses, rules-based report untouched, exit code unchanged |
+| Costs nothing when unneeded | If the rules explained every fact, no API call is made at all |
+
+"I don't have enough information" is treated as a correct answer, not a failure.
+Design rationale and rejected alternatives:
+[docs/adr/0001-llm-synthesis-layer.md](docs/adr/0001-llm-synthesis-layer.md).
+
+```console
+$ pip install "edgedoctor[llm]" && export ANTHROPIC_API_KEY=...
+$ edgedoctor diagnose build.log --llm
+```
 
 ---
 

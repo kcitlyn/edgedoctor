@@ -91,12 +91,23 @@ def diagnose(
     json_output: bool = typer.Option(
         False, "--json", help="Emit machine-readable JSON on stdout."
     ),
+    llm: bool = typer.Option(
+        False, "--llm",
+        help="Additionally try to explain facts no rule matched, using an LLM "
+             "(needs ANTHROPIC_API_KEY and the [llm] extra). Off by default: "
+             "the rules-only path is deterministic and free.",
+    ),
 ) -> None:
     """Diagnose why a model fails or underperforms on an edge backend.
 
     Parses the artifact, matches facts against the rule knowledge base, and
     renders a grounded report with evidence, root cause, and fix suggestions.
-    Works fully offline — no LLM, no API key.
+    Works fully offline by default — no LLM, no API key.
+
+    Pass --llm to opt into synthesis for facts the rules don't cover. It is
+    strictly additive: it only sees unmatched facts, every claim it makes must
+    cite a real parsed fact, and any failure leaves the rules-based report
+    exactly as it would have been.
     """
     err.print(f"[dim]edgedoctor v{__version__} · artifact={artifact} · "
               f"backend={backend.value}[/dim]")
@@ -120,6 +131,23 @@ def diagnose(
     # 2. Diagnose (rule-based, deterministic)
     from .diagnoser import diagnose as run_diagnosis
     diagnoses = run_diagnosis(facts)
+
+    # 2b. Optional synthesis over whatever the rules couldn't explain.
+    # Reported on stderr so it never pollutes --json on stdout.
+    if llm:
+        from .llm import availability, synthesize
+
+        ok, reason = availability()
+        if not ok:
+            err.print(f"[yellow]note:[/yellow] --llm requested but {reason}.")
+            err.print("[dim]      Continuing with rules-only diagnosis.[/dim]")
+        else:
+            err.print("[dim]synthesizing unmatched facts...[/dim]")
+            synthesized = synthesize(facts, diagnoses)
+            if synthesized:
+                diagnoses = diagnoses + synthesized
+            else:
+                err.print("[dim]no additional grounded diagnoses.[/dim]")
 
     # 3. Render
     from .report import render_human, render_json

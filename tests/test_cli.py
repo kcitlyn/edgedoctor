@@ -111,3 +111,55 @@ class TestDiagnose:
     def test_unknown_backend_rejected(self):
         result = runner.invoke(app, ["diagnose", self.FIXTURE, "-b", "notreal"])
         assert result.exit_code != 0
+
+
+class TestLlmFlag:
+    """The --llm flag must be opt-in and must never worsen a run.
+
+    These use a runner with no ANTHROPIC_API_KEY, so they exercise the
+    degradation path — the one that matters most, since it's what any user
+    without a key configured will hit.
+    """
+
+    FIXTURE = "tests/fixtures/tensorrt/unsupported_op_trt8.log"
+    # env= replaces the environment, so no real key can leak in and no test
+    # here can make a live API call.
+    keyless = CliRunner(env={"NO_COLOR": "1", "TERM": "dumb", "COLUMNS": "100",
+                             "ANTHROPIC_API_KEY": ""})
+
+    def test_llm_is_off_by_default(self):
+        # The default path must stay deterministic and offline.
+        result = runner.invoke(app, ["diagnose", self.FIXTURE])
+        assert "synthesiz" not in result.output.lower()
+
+    def test_llm_flag_documented_in_help(self):
+        result = runner.invoke(app, ["diagnose", "--help"])
+        assert "--llm" in result.output
+
+    def test_unavailable_llm_explains_itself(self):
+        # Asserts the INVARIANT, not the specific reason: the reason legitimately
+        # differs by environment (missing key locally, missing SDK in CI, since
+        # anthropic is an optional extra that `uv sync` doesn't install). The
+        # contract is that --llm doing nothing is always explained, never silent.
+        result = self.keyless.invoke(app, ["diagnose", self.FIXTURE, "--llm"])
+        assert "--llm requested but" in result.output
+        assert "rules-only" in result.output
+
+    def test_missing_key_preserves_exit_code(self):
+        # An unavailable optional enhancement must not change the verdict.
+        result = self.keyless.invoke(app, ["diagnose", self.FIXTURE, "--llm"])
+        assert result.exit_code == 2
+
+    def test_missing_key_preserves_the_rules_report(self):
+        result = self.keyless.invoke(app, ["diagnose", self.FIXTURE, "--llm"])
+        assert "ED0101" in result.output
+        assert "GridSample" in result.output
+
+    def test_json_stays_valid_with_llm_unavailable(self):
+        # Chatter goes to stderr, so stdout must remain machine-parseable.
+        import json
+        result = self.keyless.invoke(
+            app, ["diagnose", self.FIXTURE, "--llm", "--json"]
+        )
+        data = json.loads(result.stdout)
+        assert data["diagnostics"][0]["origin"] == "rules"

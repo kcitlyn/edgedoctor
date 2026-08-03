@@ -150,6 +150,26 @@ class TestSummaryLine:
         assert "No known failure patterns matched" in output
 
 
+class TestOriginIsVisible:
+    """A generated diagnosis must never look like a curated, reviewed one."""
+
+    def test_synthesized_diagnosis_is_marked(self):
+        fact = Fact(id="f1", kind="mystery", summary="s", source="test.log:1",
+                    excerpt="something odd")
+        diag = Diagnosis(code="ED9001", severity="warning", message="a guess",
+                         evidence=["f1"], origin="llm")
+        output = render([diag], make_facts(fact))
+        assert "synthesized" in output
+
+    def test_rule_diagnosis_is_not_marked(self):
+        fact = Fact(id="f1", kind="output_mismatch", summary="s",
+                    source="test.log:1", excerpt="FAILED")
+        diag = Diagnosis(code="ED0201", severity="error", message="diverged",
+                         evidence=["f1"])
+        output = render([diag], make_facts(fact))
+        assert "synthesized" not in output
+
+
 class TestReportStructure:
     def test_shows_code_severity_and_help(self):
         fact = Fact(id="f1", kind="output_mismatch", summary="s",

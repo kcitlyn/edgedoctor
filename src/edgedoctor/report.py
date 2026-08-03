@@ -70,8 +70,13 @@ def render_human(
     for diag in diagnoses:
         style = _SEVERITY_STYLE.get(diag.severity, "bold")
         # Header line: error[ED0101]: message
+        # LLM-synthesized diagnoses are marked inline. A reader must never have
+        # to guess whether an explanation was human-reviewed (a curated rule) or
+        # generated on the spot — they carry very different weight, and an
+        # unmarked synthesis would borrow trust the rules earned.
+        marker = " [magenta](synthesized)[/magenta]" if diag.origin == "llm" else ""
         con.print(
-            f"[{style}]{diag.severity}[{diag.code}][/{style}]: {diag.message}"
+            f"[{style}]{diag.severity}[{diag.code}][/{style}]{marker}: {diag.message}"
         )
 
         # Evidence block — show the user's own log lines.
