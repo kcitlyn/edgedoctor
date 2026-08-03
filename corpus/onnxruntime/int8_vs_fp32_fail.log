@@ -1,0 +1,75 @@
+[W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
+[I] RUNNING | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
+[I] Loading input data from artifacts/_divergence_work/inputs.json
+[I] onnxrt-runner-N0-08/03/26-10:20:33  | Activating and starting inference
+[I] Creating ONNX-Runtime Inference Session with providers: ['CPUExecutionProvider']
+[I] onnxrt-runner-N0-08/03/26-10:20:33 
+    ---- Inference Input(s) ----
+    {input [dtype=float32, shape=(1, 3, 224, 224)]}
+[I] onnxrt-runner-N0-08/03/26-10:20:33 
+    ---- Inference Output(s) ----
+    {output [dtype=float32, shape=(1, 1000)]}
+[I] onnxrt-runner-N0-08/03/26-10:20:33  | Completed 1 iteration(s) in 28.68 ms | Average inference time: 28.68 ms.
+[I] Loading inference results from artifacts/_divergence_work/fp32_outputs.json
+[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-10:20:33 vs. onnxrt-runner-N0-08/03/26-10:20:30
+[I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(1, 1000))
+[I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
+[I]         onnxrt-runner-N0-08/03/26-10:20:33: output | Stats: mean=-9.4261e-05, std-dev=1.412, var=1.9937, median=-0.085078, min=-3.9919 at (0, 476), max=5.2298 at (0, 111), avg-magnitude=1.1203, p90=1.7999, p95=2.4201, p99=3.4196
+[I]             ---- Histogram ----
+                Bin Range        |  Num Elems | Visualization
+                (-4.11 , -3.18 ) |         10 | #
+                (-3.18 , -2.24 ) |         34 | #####
+                (-2.24 , -1.31 ) |        134 | ###################
+                (-1.31 , -0.375) |        229 | #################################
+                (-0.375, 0.559 ) |        272 | ########################################
+                (0.559 , 1.49  ) |        174 | #########################
+                (1.49  , 2.43  ) |         98 | ##############
+                (2.43  , 3.36  ) |         37 | #####
+                (3.36  , 4.3   ) |          8 | #
+                (4.3   , 5.23  ) |          4 | 
+[I]         onnxrt-runner-N0-08/03/26-10:20:30: output | Stats: mean=8.1482e-06, std-dev=1.4193, var=2.0144, median=-0.096945, min=-4.1115 at (0, 865), max=5.2154 at (0, 111), avg-magnitude=1.1274, p90=1.8424, p95=2.4495, p99=3.5604
+[I]             ---- Histogram ----
+                Bin Range        |  Num Elems | Visualization
+                (-4.11 , -3.18 ) |         10 | #
+                (-3.18 , -2.24 ) |         31 | ####
+                (-2.24 , -1.31 ) |        131 | ####################
+                (-1.31 , -0.375) |        242 | #####################################
+                (-0.375, 0.559 ) |        258 | ########################################
+                (0.559 , 1.49  ) |        178 | ###########################
+                (1.49  , 2.43  ) |         97 | ###############
+                (2.43  , 3.36  ) |         38 | #####
+                (3.36  , 4.3   ) |         10 | #
+                (4.3   , 5.23  ) |          5 | 
+[I]         Error Metrics: output
+[I]             Minimum Required Tolerance: elemwise error | [abs=0.59903] OR [rel=140.83] (requirements may be lower if both abs/rel tolerances are set)
+[I]             Absolute Difference | Stats: mean=0.10218, std-dev=0.081174, var=0.0065891, median=0.083508, min=0.00020099 at (0, 944), max=0.59903 at (0, 107), avg-magnitude=0.10218, p90=0.21464, p95=0.25552, p99=0.36804
+[I]                 ---- Histogram ----
+                    Bin Range          |  Num Elems | Visualization
+                    (0.000201, 0.0601) |        367 | ########################################
+                    (0.0601  , 0.12  ) |        295 | ################################
+                    (0.12    , 0.18  ) |        178 | ###################
+                    (0.18    , 0.24  ) |         96 | ##########
+                    (0.24    , 0.3   ) |         40 | ####
+                    (0.3     , 0.359 ) |         13 | #
+                    (0.359   , 0.419 ) |          8 | 
+                    (0.419   , 0.479 ) |          1 | 
+                    (0.479   , 0.539 ) |          0 | 
+                    (0.539   , 0.599 ) |          2 | 
+[I]             Relative Difference | Stats: mean=0.48438, std-dev=4.8916, var=23.928, median=0.090546, min=0.00010968 at (0, 944), max=140.83 at (0, 217), avg-magnitude=0.48438, p90=0.5273, p95=0.99377, p99=4.3219
+[I]                 ---- Histogram ----
+                    Bin Range       |  Num Elems | Visualization
+                    (0.00011, 14.1) |        997 | ########################################
+                    (14.1   , 28.2) |          1 | 
+                    (28.2   , 42.2) |          0 | 
+                    (42.2   , 56.3) |          0 | 
+                    (56.3   , 70.4) |          1 | 
+                    (70.4   , 84.5) |          0 | 
+                    (84.5   , 98.6) |          0 | 
+                    (98.6   , 113 ) |          0 | 
+                    (113    , 127 ) |          0 | 
+                    (127    , 141 ) |          1 | 
+[E]         FAILED | Output: 'output' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
+[E]     FAILED | Mismatched outputs: ['output']
+[E] Average Metrics | output: max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)
+    Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:33 vs. onnxrt-runner-N0-08/03/26-10:20:30 | Passed: 0/1 iterations | Pass Rate: 0.0%
+[E] FAILED | Runtime: 1.221s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
