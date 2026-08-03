@@ -40,11 +40,12 @@ no API key). Honest state of the build:
 | Piece                                        | State           |
 | -------------------------------------------- | --------------- |
 | TensorRT log parser (op failures, build errors) | ✅ works      |
-| Rule knowledge base → root cause + fix       | ✅ works (5 rules, growing) |
+| Polygraphy parser (accuracy divergence)      | ✅ works        |
+| Rule knowledge base → root cause + fix       | ✅ works (10 rules, growing) |
 | `edgedoctor diagnose` / `parse` CLI, `--json` | ✅ works       |
 | PyTorch → ONNX export + verification scripts | ✅ works        |
+| Accuracy divergence (FP32 vs INT8)           | ✅ works (real corpus) |
 | Validation against real-hardware logs        | 🔜 in progress  |
-| Accuracy divergence (FP32 vs INT8)           | 🔜 next         |
 | Optional grounded LLM synthesis layer        | 🔜 next         |
 | ONNX Runtime backend (2nd vendor)            | 🗺️ planned (Aug) |
 | CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
@@ -97,7 +98,9 @@ agents. Exit codes: `0` clean · `2` errors found · `3` warnings only.
 | (A) Conversion / op-support failures    | TensorRT          | ✅ working   |
 | (A) Build failures (no kernel, tactics) | TensorRT          | ✅ working   |
 | (A) CPU fallback (unsupported subgraph) | ONNX Runtime²     | 🗺️ planned   |
-| (B) Accuracy divergence (FP32 vs INT8)  | TensorRT (first)  | 🔜 building  |
+| (B) Accuracy divergence (FP32 vs INT8)  | Polygraphy        | ✅ working   |
+| (B) NaN / Inf in outputs                | Polygraphy        | ✅ working   |
+| (B) Layer-wise first-diverging tensor   | Polygraphy        | ✅ working   |
 | Memory / arena overflow                 | —                 | 🗺️ planned   |
 | Performance regression (fused engines)  | —                 | ⛔ out of scope (near-term)¹ |
 

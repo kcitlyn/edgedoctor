@@ -22,6 +22,7 @@ import typer
 from rich.console import Console
 
 from . import __version__
+from .backends import PARSER_REGISTRY, get_parser
 
 app = typer.Typer(
     name="edgedoctor",
@@ -38,12 +39,18 @@ err = Console(stderr=True)
 class BackendName(str, Enum):
     """Backends edgedoctor knows the *name* of.
 
-    Only tensorrt has even a stub implementation; the rest are declared so
-    --help honestly shows the planned cross-vendor surface without claiming
-    they work. (An Enum gives typer choice-validation + tab completion.)
+    Only some have parsers; the rest are declared so --help honestly shows the
+    planned cross-vendor surface without claiming they work. (An Enum gives
+    typer choice-validation + tab completion.)
+
+    `polygraphy` is the odd one out: it isn't a piece of silicon but NVIDIA's
+    model-comparison tool, whose logs describe a comparison BETWEEN backends.
+    It's listed here because "which parser + rule family" is exactly what this
+    flag selects.
     """
 
     tensorrt = "tensorrt"
+    polygraphy = "polygraphy"
     onnxruntime = "onnxruntime"
     coreml = "coreml"
     tflite = "tflite"
@@ -51,7 +58,10 @@ class BackendName(str, Enum):
 
 
 # Backends whose full diagnose pipeline (parse → rules → report) works.
-IMPLEMENTED_BACKENDS: set[BackendName] = {BackendName.tensorrt}
+# Derived from the registry so this can never drift out of sync with reality.
+IMPLEMENTED_BACKENDS: set[BackendName] = {
+    b for b in BackendName if b.value in PARSER_REGISTRY
+}
 
 
 def _version_callback(value: bool) -> None:
@@ -105,8 +115,7 @@ def diagnose(
         raise typer.Exit(code=1)
 
     # 1. Parse
-    from .backends.tensorrt import TensorRTBackend
-    facts = TensorRTBackend().parse(artifact)
+    facts = get_parser(backend.value).parse(artifact)
 
     # 2. Diagnose (rule-based, deterministic)
     from .diagnoser import diagnose as run_diagnosis
@@ -152,13 +161,11 @@ def parse(
         err.print(f"[red]error:[/red] file not found: {artifact}")
         raise typer.Exit(code=1)
 
-    if backend is not BackendName.tensorrt:
+    if backend.value not in PARSER_REGISTRY:
         err.print(f"[red]error:[/red] no parser for '{backend.value}' yet — see ROADMAP.md")
         raise typer.Exit(code=1)
 
-    from .backends.tensorrt import TensorRTBackend
-
-    facts = TensorRTBackend().parse(artifact)
+    facts = get_parser(backend.value).parse(artifact)
 
     if json_output:
         # Machine consumers get the exact pydantic contract on stdout.

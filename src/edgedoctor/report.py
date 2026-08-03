@@ -23,6 +23,24 @@ from rich.console import Console
 from . import __version__
 from .backends.base import Diagnosis, Facts
 
+# Max evidence blocks printed per diagnosis before the rest are summarized.
+# 4 keeps a diagnosis readable on one screen while still showing the primary
+# proof plus a couple of supporting measurements.
+MAX_EVIDENCE_SHOWN = 4
+
+# Max characters of a single excerpt line shown in the terminal. Polygraphy
+# prints its full mismatched-output list on one line, which for a layer-wise
+# run is ~3000 characters. Clipping is marked with a visible "… (+N chars)" so
+# the reader knows the line continued; --json keeps the untouched excerpt.
+MAX_EXCERPT_CHARS = 300
+
+
+def _clip(text: str, limit: int = MAX_EXCERPT_CHARS) -> str:
+    """Shorten an over-long excerpt, marking the omission explicitly."""
+    if len(text) <= limit:
+        return text
+    return f"{text[:limit]}… (+{len(text) - limit} chars, use --json for the full line)"
+
 # Severity → color/style for the header.
 _SEVERITY_STYLE = {
     "error": "bold red",
@@ -57,16 +75,40 @@ def render_human(
         )
 
         # Evidence block — show the user's own log lines.
+        # Capped: a layer-wise Polygraphy run can cite ~200 facts for one
+        # diagnosis, which buries the explanation in 1000 lines of log. rustc
+        # does the same thing with repeated errors. The cap is ANNOUNCED, never
+        # silent — an omission the reader can't see would misrepresent how much
+        # evidence exists. `--json` always contains every fact id.
+        shown = 0
         for fid in diag.evidence:
             fact = fact_map.get(fid)
             if not fact:
                 continue
+            if shown >= MAX_EVIDENCE_SHOWN:
+                remaining = len(diag.evidence) - shown
+                con.print(
+                    f"   [dim]... and {remaining} more supporting fact(s) "
+                    f"(use --json to see all)[/dim]"
+                )
+                break
+            shown += 1
             con.print(f"  [dim]--> {fact.source}[/dim]")
             if fact.excerpt:
                 # Indent the verbatim excerpt like rustc does.
                 lineno = fact.source.rsplit(":", 1)[-1] if ":" in fact.source else ""
                 con.print("   [dim]|[/dim]")
-                con.print(f"[dim]{lineno:>4}[/dim] | {fact.excerpt}")
+                # markup=False and highlight=False are REQUIRED, not stylistic.
+                # Real logs contain square brackets — Polygraphy prints
+                # "Tolerance: [abs=1e-05, rel=1e-05]" — and rich would parse
+                # "[abs=1e-05, rel=1e-05]" as a style tag and DELETE it from the
+                # output. Silently altering the user's own log line breaks the
+                # core promise that evidence is verbatim. Covered by
+                # tests/test_report.py::TestEvidenceIsVerbatim.
+                con.print(f"[dim]{lineno:>4}[/dim] | ", end="")
+                con.print(
+                    _clip(fact.excerpt), markup=False, highlight=False, soft_wrap=True
+                )
                 con.print("   [dim]|[/dim]")
 
         # Note (the "why").
@@ -93,11 +135,19 @@ def render_human(
     # Summary line at the end.
     errors = sum(1 for d in diagnoses if d.severity == "error")
     warnings = sum(1 for d in diagnoses if d.severity == "warning")
+    infos = sum(1 for d in diagnoses if d.severity == "info")
     parts = []
     if errors:
         parts.append(f"[red]{errors} error{'s' if errors != 1 else ''}[/red]")
     if warnings:
         parts.append(f"[yellow]{warnings} warning{'s' if warnings != 1 else ''}[/yellow]")
+    if infos:
+        parts.append(f"[blue]{infos} note{'s' if infos != 1 else ''}[/blue]")
+    # An info-only run used to render "summary:  · parsed N fact(s)" — counting
+    # only errors/warnings left the clause empty. A clean result deserves to be
+    # stated, not implied by absence.
+    if not parts:
+        parts.append("no issues found")
     con.print(f"[bold]summary:[/bold] {', '.join(parts)} · "
               f"parsed {len(facts.facts)} fact(s) from {facts.artifact_path}")
 
