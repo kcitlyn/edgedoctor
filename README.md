@@ -114,6 +114,15 @@ $ pip install "edgedoctor[llm]" && export ANTHROPIC_API_KEY=...
 $ edgedoctor diagnose build.log --llm
 ```
 
+The layer's logic is covered by hermetic tests (no key, no network, no spend).
+Verifying the *live* API path is a separate opt-in run, gated on two env vars so
+neither CI nor a developer with a key exported for other reasons ever pays by
+accident:
+
+```console
+$ EDGEDOCTOR_LIVE_TESTS=1 uv run pytest tests/test_llm_live.py -v
+```
+
 ---
 
 ## Failure taxonomy (what edgedoctor diagnoses)
