@@ -60,6 +60,28 @@ The plan called for pytest-recording cassettes. Chosen differently:
 The failure modes worth testing are ours, not the SDK's. Verifying the live wire
 format is a follow-up worth doing once, against a real key.
 
+**Update (2026-08-03):** the claim above was too comfortable. A fake client
+accepts *anything*, so it cannot catch a renamed kwarg, an unserializable
+schema, or reading the response off the wrong attribute — all of which are our
+bugs, not the SDK's, and all of which would ship silently. Fixed by adding a
+middle layer (`tests/test_llm_wire.py`): the **real** SDK driven against
+`httpx.MockTransport`. That exercises anthropic's actual request-building and
+response-parsing with no key, no spend, and no network, so CI verifies the wire
+contract on every push. Cassettes are still not used — this gets the same
+coverage without recording anything or adding a dependency.
+
+Testing is now three layers, and only the third needs a key:
+
+| Layer | Verifies | Key? |
+| --- | --- | --- |
+| `test_llm.py` (fake client) | our logic: grounding, degradation, labelling | no |
+| `test_llm_wire.py` (real SDK + mock transport) | our request is well-formed | no |
+| `test_llm_live.py` (real API) | a real model's output is sensible | yes |
+
+What remains genuinely unverifiable without a key is model *behaviour* — whether
+a real model grounds its citations and reaches for `insufficient_info`. That is
+behaviour, not contract, and no amount of mocking can substitute for it.
+
 ## 6. A separate `SynthesizedDiagnosis` wire schema
 
 The model is handed a narrow schema containing only fields it should decide —

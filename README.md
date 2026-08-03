@@ -46,7 +46,7 @@ no API key). Honest state of the build:
 | PyTorch → ONNX export + verification scripts | ✅ works        |
 | Accuracy divergence (FP32 vs INT8)           | ✅ works (real corpus) |
 | Validation against real-hardware logs        | 🔜 in progress  |
-| Optional grounded LLM synthesis layer (`--llm`) | ✅ works (untested vs live API) |
+| Optional grounded LLM synthesis layer (`--llm`) | ✅ works (SDK contract verified; live model behaviour unverified) |
 | ONNX Runtime backend (2nd vendor)            | ✅ works (CPU-fallback detection) |
 | CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
 | MCP server surface                           | 🗺️ planned      |
@@ -114,10 +114,17 @@ $ pip install "edgedoctor[llm]" && export ANTHROPIC_API_KEY=...
 $ edgedoctor diagnose build.log --llm
 ```
 
-The layer's logic is covered by hermetic tests (no key, no network, no spend).
-Verifying the *live* API path is a separate opt-in run, gated on two env vars so
-neither CI nor a developer with a key exported for other reasons ever pays by
-accident:
+Testing is layered, so most of it runs free on every push:
+
+| Layer | Verifies | Needs a key? |
+| --- | --- | --- |
+| `tests/test_llm.py` (fake client) | our logic — grounding gate, degradation, trust labelling | no |
+| `tests/test_llm_wire.py` (real SDK + mock transport) | our *request* is well-formed: endpoint, params, schema serialization, real SDK error types | no |
+| `tests/test_llm_live.py` (real API) | a real model's output is sensible and grounded | **yes** |
+
+The first two run in CI. Only the third — model *behaviour*, not contract —
+needs a key, and it's gated on two env vars so neither CI nor a developer with a
+key exported for other reasons ever pays by accident:
 
 ```console
 $ EDGEDOCTOR_LIVE_TESTS=1 uv run pytest tests/test_llm_live.py -v
