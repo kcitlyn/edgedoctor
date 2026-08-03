@@ -1,22 +1,22 @@
 [W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
-[I] RUNNING | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --load-outputs artifacts/_divergence_work/batch2_outputs.json
+[I] RUNNING | Command: <VENV>/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --load-outputs artifacts/_divergence_work/batch2_outputs.json
 [I] Will generate inference input data according to provided TensorMetadata: {input [shape=(1, 3, 224, 224)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:43  | Activating and starting inference
+[I] onnxrt-runner-N0-08/03/26-14:00:03  | Activating and starting inference
 [I] Creating ONNX-Runtime Inference Session with providers: ['CPUExecutionProvider']
-[I] onnxrt-runner-N0-08/03/26-10:20:43 
+[I] onnxrt-runner-N0-08/03/26-14:00:03 
     ---- Inference Input(s) ----
     {input [dtype=float32, shape=(1, 3, 224, 224)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:43 
+[I] onnxrt-runner-N0-08/03/26-14:00:03 
     ---- Inference Output(s) ----
     {output [dtype=float32, shape=(1, 1000)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:43  | Completed 1 iteration(s) in 69.29 ms | Average inference time: 69.29 ms.
+[I] onnxrt-runner-N0-08/03/26-14:00:03  | Completed 1 iteration(s) in 69.02 ms | Average inference time: 69.02 ms.
 [I] Loading inference results from artifacts/_divergence_work/batch2_outputs.json
-[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-10:20:43 vs. onnxrt-runner-N0-08/03/26-10:20:41
+[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-14:00:03 vs. onnxrt-runner-N0-08/03/26-14:00:01
 [I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(2, 1000))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
 [E]         FAILED | Output: `output` | Will not compare outputs of different shapes.
             Note: Output shapes are (1, 1000) and (2, 1000).
 [E]         Note: Use --no-shape-check or set check_shapes=False to attempt to compare values anyway.
 [E]     FAILED | Mismatched outputs: ['output']
-[E] Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:43 vs. onnxrt-runner-N0-08/03/26-10:20:41 | Passed: 0/1 iterations | Pass Rate: 0.0%
-[E] FAILED | Runtime: 1.381s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --load-outputs artifacts/_divergence_work/batch2_outputs.json
+[E] Accuracy Summary | onnxrt-runner-N0-08/03/26-14:00:03 vs. onnxrt-runner-N0-08/03/26-14:00:01 | Passed: 0/1 iterations | Pass Rate: 0.0%
+[E] FAILED | Runtime: 1.551s | Command: <VENV>/bin/polygraphy run artifacts/resnet18.onnx --onnxrt --input-shapes input:[1,3,224,224] --load-outputs artifacts/_divergence_work/batch2_outputs.json

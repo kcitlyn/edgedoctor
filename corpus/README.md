@@ -36,7 +36,21 @@ corpus/
    Keep a couple of clean success logs too (parsers must not hallucinate
    failures where there are none).
 4. Scrub nothing except genuine secrets (there normally are none in these
-   logs). Line numbers matter — parsers cite them.
+   logs) **and machine-specific absolute paths**. Line numbers matter — parsers
+   cite them, and the snapshot tests assert each fact's excerpt equals its
+   source line, so any edit that shifts a line silently invalidates every
+   citation.
+
+   Path masking is done by the generators at capture time
+   (`scripts/_corpus_paths.py`), not by a cleanup pass, so committed logs are
+   portable by construction: `/Users/you/proj/.venv/bin/polygraphy` becomes
+   `<VENV>/bin/polygraphy`. It is a within-line substitution only, so line
+   numbers are preserved. `tests/test_corpus_hygiene.py` enforces this over
+   every log in the corpus, along with the sidecar requirement above — so a new
+   artifact is covered the moment it lands, with no test to update.
+
+   To regenerate after a change, re-run the relevant `scripts/make_*_corpus.py`
+   rather than editing a log by hand.
 
 ## Sidecar template
 

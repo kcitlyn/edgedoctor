@@ -1,20 +1,20 @@
 [W] 'colored' module is not installed, will not use colors when logging. To enable colors, please install the 'colored' module: python3 -m pip install colored
-[I] RUNNING | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
+[I] RUNNING | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
 [I] Loading input data from artifacts/_divergence_work/inputs.json
-[I] onnxrt-runner-N0-08/03/26-10:20:33  | Activating and starting inference
+[I] onnxrt-runner-N0-08/03/26-13:59:53  | Activating and starting inference
 [I] Creating ONNX-Runtime Inference Session with providers: ['CPUExecutionProvider']
-[I] onnxrt-runner-N0-08/03/26-10:20:33 
+[I] onnxrt-runner-N0-08/03/26-13:59:53 
     ---- Inference Input(s) ----
     {input [dtype=float32, shape=(1, 3, 224, 224)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:33 
+[I] onnxrt-runner-N0-08/03/26-13:59:53 
     ---- Inference Output(s) ----
     {output [dtype=float32, shape=(1, 1000)]}
-[I] onnxrt-runner-N0-08/03/26-10:20:33  | Completed 1 iteration(s) in 28.68 ms | Average inference time: 28.68 ms.
+[I] onnxrt-runner-N0-08/03/26-13:59:53  | Completed 1 iteration(s) in 28.67 ms | Average inference time: 28.67 ms.
 [I] Loading inference results from artifacts/_divergence_work/fp32_outputs.json
-[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-10:20:33 vs. onnxrt-runner-N0-08/03/26-10:20:30
+[I] Accuracy Comparison | onnxrt-runner-N0-08/03/26-13:59:53 vs. onnxrt-runner-N0-08/03/26-13:59:50
 [I]     Comparing Output: 'output' (dtype=float32, shape=(1, 1000)) with 'output' (dtype=float32, shape=(1, 1000))
 [I]         Tolerance: [abs=1e-05, rel=1e-05] | Checking elemwise error
-[I]         onnxrt-runner-N0-08/03/26-10:20:33: output | Stats: mean=-9.4261e-05, std-dev=1.412, var=1.9937, median=-0.085078, min=-3.9919 at (0, 476), max=5.2298 at (0, 111), avg-magnitude=1.1203, p90=1.7999, p95=2.4201, p99=3.4196
+[I]         onnxrt-runner-N0-08/03/26-13:59:53: output | Stats: mean=-9.4261e-05, std-dev=1.412, var=1.9937, median=-0.085078, min=-3.9919 at (0, 476), max=5.2298 at (0, 111), avg-magnitude=1.1203, p90=1.7999, p95=2.4201, p99=3.4196
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.11 , -3.18 ) |         10 | #
@@ -27,7 +27,7 @@
                 (2.43  , 3.36  ) |         37 | #####
                 (3.36  , 4.3   ) |          8 | #
                 (4.3   , 5.23  ) |          4 | 
-[I]         onnxrt-runner-N0-08/03/26-10:20:30: output | Stats: mean=8.1482e-06, std-dev=1.4193, var=2.0144, median=-0.096945, min=-4.1115 at (0, 865), max=5.2154 at (0, 111), avg-magnitude=1.1274, p90=1.8424, p95=2.4495, p99=3.5604
+[I]         onnxrt-runner-N0-08/03/26-13:59:50: output | Stats: mean=8.1482e-06, std-dev=1.4193, var=2.0144, median=-0.096945, min=-4.1115 at (0, 865), max=5.2154 at (0, 111), avg-magnitude=1.1274, p90=1.8424, p95=2.4495, p99=3.5604
 [I]             ---- Histogram ----
                 Bin Range        |  Num Elems | Visualization
                 (-4.11 , -3.18 ) |         10 | #
@@ -71,5 +71,5 @@
 [E]         FAILED | Output: 'output' | Difference exceeds tolerance (rel=1e-05, abs=1e-05)
 [E]     FAILED | Mismatched outputs: ['output']
 [E] Average Metrics | output: max_absdiff=0.59903 (n=1), max_reldiff=140.83 (n=1), mean_absdiff=0.10218 (n=1), mean_reldiff=0.48438 (n=1), median_absdiff=0.083508 (n=1), median_reldiff=0.090546 (n=1)
-    Accuracy Summary | onnxrt-runner-N0-08/03/26-10:20:33 vs. onnxrt-runner-N0-08/03/26-10:20:30 | Passed: 0/1 iterations | Pass Rate: 0.0%
-[E] FAILED | Runtime: 1.221s | Command: /Users/chenkait/personal/edgedoctor/.venv/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
+    Accuracy Summary | onnxrt-runner-N0-08/03/26-13:59:53 vs. onnxrt-runner-N0-08/03/26-13:59:50 | Passed: 0/1 iterations | Pass Rate: 0.0%
+[E] FAILED | Runtime: 1.314s | Command: <VENV>/bin/polygraphy run artifacts/_divergence_work/resnet18_int8.onnx --onnxrt --load-inputs artifacts/_divergence_work/inputs.json --load-outputs artifacts/_divergence_work/fp32_outputs.json
