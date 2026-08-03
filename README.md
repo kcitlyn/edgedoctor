@@ -41,13 +41,13 @@ no API key). Honest state of the build:
 | -------------------------------------------- | --------------- |
 | TensorRT log parser (op failures, build errors) | ✅ works      |
 | Polygraphy parser (accuracy divergence)      | ✅ works        |
-| Rule knowledge base → root cause + fix       | ✅ works (10 rules, growing) |
+| Rule knowledge base → root cause + fix       | ✅ works (15 rules, growing) |
 | `edgedoctor diagnose` / `parse` CLI, `--json` | ✅ works       |
 | PyTorch → ONNX export + verification scripts | ✅ works        |
 | Accuracy divergence (FP32 vs INT8)           | ✅ works (real corpus) |
 | Validation against real-hardware logs        | 🔜 in progress  |
 | Optional grounded LLM synthesis layer (`--llm`) | ✅ works (untested vs live API) |
-| ONNX Runtime backend (2nd vendor)            | 🗺️ planned (Aug) |
+| ONNX Runtime backend (2nd vendor)            | ✅ works (CPU-fallback detection) |
 | CoreML / TFLite / ExecuTorch backends        | 🗺️ planned      |
 | MCP server surface                           | 🗺️ planned      |
 
@@ -131,7 +131,8 @@ $ EDGEDOCTOR_LIVE_TESTS=1 uv run pytest tests/test_llm_live.py -v
 | --------------------------------------- | ----------------- | ----------- |
 | (A) Conversion / op-support failures    | TensorRT          | ✅ working   |
 | (A) Build failures (no kernel, tactics) | TensorRT          | ✅ working   |
-| (A) CPU fallback (unsupported subgraph) | ONNX Runtime²     | 🗺️ planned   |
+| (A) CPU fallback (unsupported subgraph) | ONNX Runtime²     | ✅ working   |
+| (A) Requested EP unavailable (silent CPU) | ONNX Runtime    | ✅ working   |
 | (B) Accuracy divergence (FP32 vs INT8)  | Polygraphy        | ✅ working   |
 | (B) NaN / Inf in outputs                | Polygraphy        | ✅ working   |
 | (B) Layer-wise first-diverging tensor   | Polygraphy        | ✅ working   |

@@ -53,8 +53,9 @@ along and runs it.
 
 Each is its own mini-release (see [VISION.md](VISION.md) for full rationale):
 
-- [ ] 2nd & 3rd backends — CoreML, ONNX-RT, TFLite/ExecuTorch → proves
-      "cross-vendor."
+- [x] 2nd backend — ONNX Runtime (CPU-fallback + EP placement, ED03xx).
+      Proves "cross-vendor": same contracts, same report, different tool.
+- [ ] 3rd backend — CoreML, TFLite/ExecuTorch.
 - [ ] Memory / arena-overflow failure class, then more taxonomy.
 - [ ] MCP server wrapper — agents call edgedoctor directly.
 - [ ] Synthetic failure-corpus + LLM-as-judge eval harness → reference benchmark.
