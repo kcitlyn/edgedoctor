@@ -43,15 +43,18 @@ class BackendName(str, Enum):
     planned cross-vendor surface without claiming they work. (An Enum gives
     typer choice-validation + tab completion.)
 
-    `polygraphy` is the odd one out: it isn't a piece of silicon but NVIDIA's
-    model-comparison tool, whose logs describe a comparison BETWEEN backends.
-    It's listed here because "which parser + rule family" is exactly what this
-    flag selects.
+    Two entries aren't silicon at all, because what this flag really selects is
+    "which parser + rule family":
+      - `polygraphy` is NVIDIA's model-comparison tool, whose logs describe a
+        comparison BETWEEN backends, so it belongs to neither.
+      - `raspberrypi` describes the HOST rather than a model — throttling and
+        OOM state, which say whether a measurement is trustworthy at all.
     """
 
     tensorrt = "tensorrt"
     polygraphy = "polygraphy"
     onnxruntime = "onnxruntime"
+    raspberrypi = "raspberrypi"
     coreml = "coreml"
     tflite = "tflite"
     executorch = "executorch"
