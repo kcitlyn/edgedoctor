@@ -248,25 +248,36 @@ class TestUsageErrorMessagesAreSpecific:
     assertions only checked the exit code and a loose substring.
     """
 
+    @staticmethod
+    def _unwrapped(output: str) -> str:
+        """Collapse whitespace so assertions survive rich's line wrapping.
+
+        rich wraps to the terminal width, and CI's temp paths are much longer
+        than a local machine's — long enough to push a phrase across a line
+        boundary mid-word ("not a log\nfile"). Asserting on raw output made
+        these tests pass locally and fail in CI for no real reason.
+        """
+        return " ".join(output.split())
+
     def test_a_directory_is_named_as_a_directory(self, artifacts):
         result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
         assert result.exit_code == 1
         # The specific wording, not merely the word "directory" appearing
         # somewhere in a path that might itself contain it.
-        assert "is a directory, not a log file" in result.output, (
+        assert "is a directory, not a log file" in self._unwrapped(result.output), (
             f"unhelpful message: {result.output[-120:]!r}"
         )
 
     def test_a_directory_is_not_reported_as_merely_irregular(self, artifacts):
         result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
-        assert "is not a regular file" not in result.output, (
+        assert "is not a regular file" not in self._unwrapped(result.output), (
             "the generic fallback fired instead of the specific directory check"
         )
 
     @pytest.mark.parametrize("command", ["diagnose", "parse"])
     def test_both_commands_give_the_specific_message(self, artifacts, command):
         result = runner.invoke(app, [command, str(artifacts["directory"])])
-        assert "is a directory, not a log file" in result.output
+        assert "is a directory, not a log file" in self._unwrapped(result.output)
 
     @pytest.mark.skipif(os.geteuid() == 0, reason="root bypasses permissions")
     @pytest.mark.parametrize("command", ["diagnose", "parse"])
@@ -287,7 +298,7 @@ class TestUsageErrorMessagesAreSpecific:
                 f"exit {result.exit_code}: an unreadable file must be a usage "
                 "error (1), not a diagnosis result (2)"
             )
-            lowered = result.output.lower()
+            lowered = self._unwrapped(result.output).lower()
             assert "permission denied" in lowered, (
                 f"cause not explained: {result.output[-160:]!r}"
             )
@@ -298,4 +309,4 @@ class TestUsageErrorMessagesAreSpecific:
     def test_a_missing_file_is_named_as_missing(self, tmp_path):
         result = runner.invoke(app, ["diagnose", str(tmp_path / "nope.log")])
         assert result.exit_code == 1
-        assert "file not found" in result.output.lower()
+        assert "file not found" in self._unwrapped(result.output).lower()
