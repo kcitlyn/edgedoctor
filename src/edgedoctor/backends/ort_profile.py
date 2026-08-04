@@ -44,6 +44,7 @@ Format verified against real output from onnxruntime 1.27 (`enable_profiling`).
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -66,36 +67,42 @@ MIN_RELIABLE_ITERATIONS = 3
 _HASH_PREFIX_LEN = 6
 
 
+#: The two shapes ORT uses for an EP-compiled subgraph. Matched STRICTLY, in
+#: full, rather than by "contains a long digit run" — an earlier heuristic
+#: rewrote the ordinary op name `a_1234567890_b` into
+#: "a compiled subgraph #?", inventing a fused subgraph that doesn't exist.
+#: Renaming a real operator is worse than leaving a hash visible: the user goes
+#: looking for something that isn't in their graph.
+#:
+#:   <hash>_<EP>_<hash>_<index>                          (op_name form)
+#:   <EP>ExecutionProvider_<hash>_<EP>_<hash>_<i>_<j>    (node name form)
+_SUBGRAPH_OP = re.compile(
+    r"^\d{%d,}_(?P<ep>\w+?)_\d{%d,}_(?P<index>\d+)$" % (_HASH_PREFIX_LEN, _HASH_PREFIX_LEN)
+)
+_SUBGRAPH_NODE = re.compile(
+    r"^(?P<ep>\w+?)_\d{%d,}_\w+?_\d{%d,}_(?P<index>\d+)_\d+$"
+    % (_HASH_PREFIX_LEN, _HASH_PREFIX_LEN)
+)
+
+
 def _readable_op(op: str) -> str:
     """Turn an EP-compiled subgraph's hash name into something legible.
 
-    Two shapes occur, because ORT names the fused NODE and its op differently:
-        7615378459790495232_CoreML_7615378459790495232_0            (op_name)
-        CoreMLExecutionProvider_7615378459790495232_CoreML_..._0_0  (node name)
-    Both are hashes with an index suffix, and neither names anything a user can
-    act on, so both collapse to the same readable label.
+    ORT names a fused node and its op type differently, so both forms are
+    handled (see _SUBGRAPH_OP / _SUBGRAPH_NODE). Neither names anything a user
+    can act on, so both collapse to the same readable label.
+
+    Anything that does NOT match one of those exact shapes is returned unchanged.
+    That conservatism is deliberate: a real operator name may legitimately
+    contain digits and underscores, and mislabelling one as a compiled subgraph
+    would send the reader hunting for a node their model doesn't contain.
     """
-    parts = op.split("_")
-    if not parts:
-        return op
-
-    long_digits = [p for p in parts if p.isdigit() and len(p) >= _HASH_PREFIX_LEN]
-    if not long_digits:
-        return op
-
-    # The EP is either the leading token (node form) or the token after the
-    # leading hash (op form).
-    if parts[0].isdigit():
-        ep = parts[1] if len(parts) > 1 else "EP"
-    else:
-        ep = parts[0]
-    ep = ep.removesuffix("ExecutionProvider")
-
-    # Trailing short digits are partition/output indices; the first is the
-    # partition number.
-    tail = [p for p in parts if p.isdigit() and len(p) < _HASH_PREFIX_LEN]
-    index = tail[0] if tail else "?"
-    return f"{ep} compiled subgraph #{index}"
+    for pattern in (_SUBGRAPH_OP, _SUBGRAPH_NODE):
+        m = pattern.match(op)
+        if m:
+            ep = m.group("ep").removesuffix("ExecutionProvider")
+            return f"{ep} compiled subgraph #{m.group('index')}"
+    return op
 
 
 class OrtProfileBackend(Backend):
@@ -157,7 +164,10 @@ class OrtProfileBackend(Backend):
             if not isinstance(ev, dict) or ev.get("cat") != "Session":
                 continue
             name, dur = ev.get("name", ""), ev.get("dur")
-            if not isinstance(dur, int | float):
+            # A negative or non-finite duration is not a measurement; recording
+            # it would put nonsense in the report and skew every share computed
+            # from the total.
+            if not isinstance(dur, int | float) or isinstance(dur, bool) or dur < 0:
                 continue
             if name in ("model_loading_uri", "model_loading_array",
                         "session_initialization"):
@@ -174,6 +184,10 @@ class OrtProfileBackend(Backend):
             (i, ev) for i, ev in enumerate(events)
             if isinstance(ev, dict) and ev.get("cat") == "Node"
             and isinstance(ev.get("dur"), int | float)
+            and not isinstance(ev.get("dur"), bool)
+            # Negative durations are rejected for the same reason as above: a
+            # share of a total polluted by negative values is meaningless.
+            and ev["dur"] >= 0
             and str(ev.get("name", "")).endswith("_kernel_time")
         ]
 

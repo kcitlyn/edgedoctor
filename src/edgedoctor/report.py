@@ -204,6 +204,9 @@ def render_human(
     errors = sum(1 for d in diagnoses if d.severity == "error")
     warnings = sum(1 for d in diagnoses if d.severity == "warning")
     infos = sum(1 for d in diagnoses if d.severity == "info")
+    # Anything with a severity we don't recognize still has to be counted, or
+    # the summary contradicts the report it's summarizing.
+    other = len(diagnoses) - errors - warnings - infos
     parts = []
     if errors:
         parts.append(f"[red]{errors} error{'s' if errors != 1 else ''}[/red]")
@@ -211,10 +214,20 @@ def render_human(
         parts.append(f"[yellow]{warnings} warning{'s' if warnings != 1 else ''}[/yellow]")
     if infos:
         parts.append(f"[blue]{infos} note{'s' if infos != 1 else ''}[/blue]")
+    if other:
+        # An unknown severity is itself worth flagging: it means a rule declared
+        # something outside the documented set, and the CLI's exit code (which
+        # keys off error/warning) will not reflect it.
+        parts.append(f"{other} of unknown severity")
     # An info-only run used to render "summary:  · parsed N fact(s)" — counting
     # only errors/warnings left the clause empty. A clean result deserves to be
     # stated, not implied by absence.
-    if not parts:
+    #
+    # Guarded on `diagnoses` being empty, NOT on `parts`: a diagnosis with an
+    # unrecognized severity previously produced "no issues found" while a
+    # diagnosis was printed directly above it — the summary flatly contradicting
+    # the report.
+    if not diagnoses:
         parts.append("no issues found")
     con.print(f"[bold]summary:[/bold] {', '.join(parts)} · "
               f"parsed {len(facts.facts)} fact(s) from {facts.artifact_path}")

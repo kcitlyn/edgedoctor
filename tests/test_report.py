@@ -405,3 +405,58 @@ class TestJsonIsSpecCompliant:
         data = json.loads(render_json([diag], facts))
         assert data["diagnostics"][0]["code"] == "ED0201"
         assert data["facts"][0]["data"]["output"] == "logits"
+
+
+class TestSummaryNeverContradictsTheReport:
+    """The summary is the line users skim, so it must agree with what's above it.
+
+    Regression: a diagnosis with a severity outside error/warning/info was
+    printed in full and then summarized as "no issues found" — the summary flatly
+    denying the diagnosis directly above it.
+    """
+
+    def _fact(self):
+        return Fact(id="f1", kind="k", summary="s", source="t.log:1", excerpt="x")
+
+    def test_unknown_severity_is_counted_not_ignored(self):
+        diag = Diagnosis(code="X", severity="bogus", message="m", evidence=["f1"])
+        output = render([diag], make_facts(self._fact()))
+        assert "no issues found" not in output
+        assert "unknown severity" in output
+
+    def test_unknown_severity_alongside_a_real_one(self):
+        diags = [
+            Diagnosis(code="E", severity="error", message="m", evidence=["f1"]),
+            Diagnosis(code="X", severity="bogus", message="m", evidence=["f1"]),
+        ]
+        output = render(diags, make_facts(self._fact()))
+        assert "1 error" in output
+        assert "unknown severity" in output
+
+    def test_no_issues_found_only_when_there_are_truly_none(self):
+        # With zero diagnoses the renderer takes its early-return path, which
+        # prints the honest "no known pattern matched" message instead.
+        output = render([], make_facts(self._fact()))
+        assert "No known failure patterns matched" in output
+
+    def test_summary_counts_match_the_number_of_diagnoses(self):
+        # Whatever the severities, the counts in the summary must add up to the
+        # number of diagnoses actually rendered.
+        import re
+
+        diags = [
+            Diagnosis(code="E", severity="error", message="m", evidence=["f1"]),
+            Diagnosis(code="E2", severity="error", message="m", evidence=["f1"]),
+            Diagnosis(code="W", severity="warning", message="m", evidence=["f1"]),
+            Diagnosis(code="I", severity="info", message="m", evidence=["f1"]),
+        ]
+        output = render(diags, make_facts(self._fact()))
+        summary = next(ln for ln in output.splitlines() if ln.startswith("summary:"))
+        counted = sum(int(n) for n in re.findall(r"(\d+) (?:error|warning|note)", summary))
+        assert counted == len(diags), f"{summary!r} does not account for 4 diagnoses"
+
+    def test_pluralization_is_correct(self):
+        one = [Diagnosis(code="E", severity="error", message="m", evidence=["f1"])]
+        two = one * 2
+        assert "1 error ·" in render(one, make_facts(self._fact()))
+        assert "2 errors" in render(two, make_facts(self._fact()))
