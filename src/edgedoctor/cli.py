@@ -189,16 +189,32 @@ def diagnose(
 
     if json_output:
         print(render_json(diagnoses, facts))
-        raise typer.Exit(code=0)
-
-    render_human(diagnoses, facts, console=out)
+        # Falls through to the SAME exit-code logic as the human path. It used to
+        # exit 0 unconditionally, which broke the documented contract in exactly
+        # the situation --json exists for: a CI job piping the report to jq saw
+        # success on a run that found errors. The report format must not change
+        # the verdict.
+    else:
+        render_human(diagnoses, facts, console=out)
 
     # Exit code per contract: 2 = errors found, 3 = warnings only, 0 = clean.
-    has_errors = any(d.severity == "error" for d in diagnoses)
-    has_warnings = any(d.severity == "warning" for d in diagnoses)
-    if has_errors:
+    #
+    # A SYNTHESIZED finding can never produce exit 2, only 3. The exit code is
+    # an API that CI gates branch on, and an LLM diagnosis is unreviewed and
+    # capped at medium confidence — letting one fail a build would contradict
+    # this layer's whole premise, documented in docs/adr/0001, that `--llm` can
+    # only ever add and never degrade a run. Capping at 3 keeps a genuine
+    # LLM-only finding visible to automation (it is not silently swallowed)
+    # while reserving the hard-failure code for curated, human-reviewed rules.
+    rule_diagnoses = [d for d in diagnoses if d.origin != "llm"]
+    has_rule_errors = any(d.severity == "error" for d in rule_diagnoses)
+    has_rule_warnings = any(d.severity == "warning" for d in rule_diagnoses)
+    # Any synthesized finding at all is worth a non-zero code, at warning level.
+    has_synthesized = len(diagnoses) != len(rule_diagnoses)
+
+    if has_rule_errors:
         raise typer.Exit(code=2)
-    elif has_warnings:
+    elif has_rule_warnings or has_synthesized:
         raise typer.Exit(code=3)
     raise typer.Exit(code=0)
 

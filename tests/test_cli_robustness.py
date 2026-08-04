@@ -179,3 +179,58 @@ class TestBackendSelection:
         )
         assert result.exit_code == 0
         assert "no parser" not in result.output
+
+
+class TestJsonHonoursTheExitCodeContract:
+    """--json changes the FORMAT, never the verdict.
+
+    The `diagnose --json` path used to `raise typer.Exit(code=0)` unconditionally,
+    so a CI job piping the report to jq saw SUCCESS on a run that found errors —
+    silently breaking the documented contract in exactly the situation --json
+    exists to serve. The README advertises --json "for CI and AI agents" in the
+    same sentence as the exit codes, so the two must agree.
+    """
+
+    @pytest.mark.parametrize(
+        "fixture,expected",
+        [
+            ("tests/fixtures/tensorrt/unsupported_op_trt8.log", 2),  # has errors
+            ("tests/fixtures/tensorrt/success.log", 0),              # clean
+        ],
+    )
+    def test_json_and_human_exit_codes_agree(self, fixture, expected):
+        human = runner.invoke(app, ["diagnose", fixture])
+        as_json = runner.invoke(app, ["diagnose", fixture, "--json"])
+        assert human.exit_code == expected
+        assert as_json.exit_code == expected, (
+            "--json must not change the verdict"
+        )
+
+    def test_json_document_is_still_on_stdout_and_valid(self):
+        # Honouring the exit code must not break the document itself.
+        result = runner.invoke(
+            app, ["diagnose", "tests/fixtures/tensorrt/unsupported_op_trt8.log",
+                  "--json"]
+        )
+        data = json.loads(result.stdout)
+        assert data["schemaVersion"] == 1
+        assert data["diagnostics"]
+
+    def test_errors_found_is_distinguishable_from_a_tool_error(self):
+        # 2 means "the log has problems"; 1 means "edgedoctor could not run".
+        # A CI script must be able to tell those apart.
+        found = runner.invoke(
+            app, ["diagnose", "tests/fixtures/tensorrt/unsupported_op_trt8.log",
+                  "--json"]
+        )
+        broken = runner.invoke(app, ["diagnose", "no_such_file.log", "--json"])
+        assert found.exit_code == 2
+        assert broken.exit_code == 1
+
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_every_backend_agrees_across_formats(self, artifacts, backend):
+        # Whatever the backend, the two output modes must return the same code.
+        target = str(artifacts["empty"])
+        human = runner.invoke(app, ["diagnose", target, "-b", backend])
+        as_json = runner.invoke(app, ["diagnose", target, "-b", backend, "--json"])
+        assert human.exit_code == as_json.exit_code

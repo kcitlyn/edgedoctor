@@ -83,7 +83,9 @@ summary: 3 errors · parsed 5 fact(s) from build.log
 
 Every rule code (`ED0101`) maps to a curated cause + fix with reference URLs.
 `--json` emits the same diagnosis as a structured document for CI and AI
-agents. Exit codes: `0` clean · `2` errors found · `3` warnings only.
+agents — with the **same exit code** as the human report, since the format
+must not change the verdict. Exit codes: `0` clean · `1` usage/tool error ·
+`2` errors found · `3` warnings only.
 
 > Every claim is traceable to a parsed log line — the evidence block shows your
 > own log, verbatim. If edgedoctor doesn't have the evidence, it says so — it
@@ -103,6 +105,7 @@ degrade what the rules already give you:
 | Cannot invent evidence | It sees parsed `Facts`, never the raw log. Any diagnosis citing a fact id that wasn't in its input is **dropped, not displayed** |
 | Cannot pose as a reviewed rule | Marked `(synthesized)` in the report and `origin: "llm"` in `--json`; capped below `high` confidence; reserved `ED9001` code; its suggestions are never `machine-applicable` |
 | Cannot break the tool | Missing SDK, missing key, timeout, malformed response → zero synthesized diagnoses, rules-based report untouched, exit code unchanged |
+| Cannot fail your CI gate | A synthesized finding caps the exit code at `3`, never `2` — an unreviewed, medium-confidence guess is visible to automation but cannot break a build. Only curated rules exit `2` |
 | Costs nothing when unneeded | If the rules explained every fact, no API call is made at all |
 
 "I don't have enough information" is treated as a correct answer, not a failure.

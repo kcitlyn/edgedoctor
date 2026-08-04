@@ -93,7 +93,10 @@ class TestDiagnose:
     def test_json_output_is_valid(self):
         import json
         result = runner.invoke(app, ["diagnose", self.FIXTURE, "--json"])
-        assert result.exit_code == 0
+        # exit 2 because this fixture HAS errors: --json changes the format, not
+        # the verdict. It used to exit 0 unconditionally, which silently broke
+        # the exit-code contract for the CI consumers --json exists to serve.
+        assert result.exit_code == 2
         data = json.loads(result.stdout)
         assert data["schemaVersion"] == 1
         assert len(data["diagnostics"]) >= 1
