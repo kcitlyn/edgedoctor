@@ -24,6 +24,7 @@ from rich.console import Console
 
 from . import __version__
 from .backends import PARSER_REGISTRY, get_parser
+from .redact import sanitize_for_display, strip_control_chars
 
 app = typer.Typer(
     name="edgedoctor",
@@ -142,6 +143,13 @@ def diagnose(
              "(needs ANTHROPIC_API_KEY and the [llm] extra). Off by default: "
              "the rules-only path is deterministic and free.",
     ),
+    no_redact: bool = typer.Option(
+        False, "--no-redact",
+        help="Show evidence unmasked. By default probable secrets (tokens, "
+             "URL credentials) are replaced with a visible marker, because "
+             "build logs contain credentials and reports get shared. Control "
+             "characters are always neutralized regardless.",
+    ),
 ) -> None:
     """Diagnose why a model fails or underperforms on an edge backend.
 
@@ -196,14 +204,14 @@ def diagnose(
     from .report import render_human, render_json
 
     if json_output:
-        print(render_json(diagnoses, facts))
+        print(render_json(diagnoses, facts, redact=not no_redact))
         # Falls through to the SAME exit-code logic as the human path. It used to
         # exit 0 unconditionally, which broke the documented contract in exactly
         # the situation --json exists for: a CI job piping the report to jq saw
         # success on a run that found errors. The report format must not change
         # the verdict.
     else:
-        render_human(diagnoses, facts, console=out)
+        render_human(diagnoses, facts, console=out, redact=not no_redact)
 
     # Exit code per contract: 2 = errors found, 3 = warnings only, 0 = clean.
     #
@@ -240,6 +248,13 @@ def parse(
     json_output: bool = typer.Option(
         False, "--json", help="Emit the Facts as JSON on stdout."
     ),
+    no_redact: bool = typer.Option(
+        False, "--no-redact",
+        help="Show evidence unmasked. By default probable secrets (tokens, "
+             "URL credentials) are replaced with a visible marker, because "
+             "build logs contain credentials and reports get shared. Control "
+             "characters are always neutralized regardless.",
+    ),
 ) -> None:
     """Extract structured Facts from a raw vendor artifact (no LLM, no network).
 
@@ -255,7 +270,17 @@ def parse(
     facts = get_parser(backend.value).parse(artifact)
 
     if json_output:
-        # Machine consumers get the exact pydantic contract on stdout.
+        # Machine consumers get the exact pydantic contract on stdout, with
+        # secrets masked by default — this is the path that feeds CI artifacts
+        # and agents, where a credential is most likely to be persisted or
+        # forwarded. --no-redact opts out.
+        if not no_redact:
+            from .report import redacted_facts
+
+            facts, kinds = redacted_facts(facts)
+            if kinds:
+                err.print(f"[yellow]note:[/yellow] redacted probable secret(s) "
+                          f"({', '.join(kinds)}) — rotate and scrub the log.")
         print(facts.model_dump_json(indent=2))
         return
 
@@ -268,13 +293,23 @@ def parse(
 
     from rich.table import Table
 
+    redacted: set[str] = set()
     table = Table(title=f"Facts extracted from {artifact.name}")
     table.add_column("source", style="dim", no_wrap=True)
     table.add_column("kind", style="cyan")
     table.add_column("observation")
     for f in facts.facts:
-        table.add_row(f.source, f.kind, f.summary)
+        # The summary is built from log-derived data (op names, tensor names), so
+        # it is untrusted text: neutralize control characters and mask probable
+        # secrets before printing. Same reasoning as the diagnose report — see
+        # edgedoctor.redact.
+        safe_summary, kinds = sanitize_for_display(f.summary, redact=not no_redact)
+        redacted.update(kinds)
+        table.add_row(strip_control_chars(f.source), f.kind, safe_summary)
     out.print(table)
+    if redacted:
+        err.print(f"[yellow]note:[/yellow] redacted probable secret(s) "
+                  f"({', '.join(sorted(redacted))}) — rotate and scrub the log.")
     out.print(f"[dim]{len(facts.facts)} fact(s). Run with --json for the full "
               f"structured output including verbatim excerpts.[/dim]")
 

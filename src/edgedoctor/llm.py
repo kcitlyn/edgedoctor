@@ -27,6 +27,7 @@ Three properties this module guarantees, in priority order:
 from __future__ import annotations
 
 import os
+import sys
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -137,25 +138,62 @@ Be specific and technical. The reader is an ML engineer debugging a deployment.\
 """
 
 
-def _facts_payload(facts: list[Any]) -> str:
-    """Render facts for the prompt.
+def sanitize_artifact_name(name: str) -> str:
+    """Mask secrets in the artifact path before it goes into the prompt.
 
-    Deliberately includes each fact's verbatim `excerpt`: the model needs the
-    real text to reason about, and this is still grounded — the excerpt came
-    from the parser, not from the model.
+    The filename is user-supplied and reaches the API too. A path can carry a
+    credential — a checkout under a directory named after a token, or a log
+    downloaded to `build-glpat-xxxx.log` — and it would otherwise be transmitted
+    while every excerpt around it was carefully masked.
     """
+    from .redact import sanitize_for_display
+
+    cleaned, _ = sanitize_for_display(name)
+    return cleaned
+
+
+def _facts_payload(facts: list[Any]) -> tuple[str, list[str]]:
+    """Render facts for the prompt, with secrets masked.
+
+    Includes each fact's `excerpt` because the model needs the real text to
+    reason about, and that remains grounded — the excerpt came from the parser,
+    not from the model.
+
+    SECRETS ARE REDACTED FIRST, and this is the single most important place to do
+    it in the whole tool. Everywhere else a leak means a credential appears in
+    output the user can see and choose not to share; here it means the credential
+    is TRANSMITTED to a third party, irreversibly, the moment the request is
+    made. A build log that fetched a model from a private registry routinely
+    carries such a value.
+
+    Redaction costs nothing diagnostically: a masked token tells the model just
+    as much as a real one ("there is a credential on this line"), because the
+    secret's VALUE is never what explains a build failure.
+
+    Returns the payload and the kinds masked, so the caller can tell the user
+    what was about to leave the machine.
+    """
+    from .redact import sanitize_for_display
+
+    kinds: set[str] = set()
+
+    def clean(value: object) -> str:
+        text, found = sanitize_for_display(str(value))
+        kinds.update(found)
+        return text
+
     lines = []
     for f in facts:
         lines.append(
             f"- id: {f.id}\n"
             f"  kind: {f.kind}\n"
-            f"  observed: {f.summary}\n"
-            f"  source: {f.source}\n"
-            f"  log line: {f.excerpt}"
+            f"  observed: {clean(f.summary)}\n"
+            f"  source: {clean(f.source)}\n"
+            f"  log line: {clean(f.excerpt)}"
         )
         if f.data:
-            lines.append(f"  data: {f.data}")
-    return "\n".join(lines)
+            lines.append(f"  data: {clean(f.data)}")
+    return "\n".join(lines), sorted(kinds)
 
 
 def unmatched_facts(facts: Facts, diagnoses: list[Diagnosis]) -> list[Any]:
@@ -263,11 +301,21 @@ def synthesize(
             return []
 
     valid_ids = {f.id for f in leftover}
+    payload, masked_kinds = _facts_payload(leftover)
+    if masked_kinds:
+        # Announced on stderr before the request leaves: the user should know a
+        # credential was present in what was about to be transmitted, even though
+        # it was masked, because the underlying log still contains it.
+        print(
+            f"note: masked probable secret(s) before sending to the API "
+            f"({', '.join(masked_kinds)}); rotate and scrub the log.",
+            file=sys.stderr,
+        )
     user_prompt = (
         f"Backend: {facts.backend}\n"
-        f"Artifact: {facts.artifact_path}\n\n"
+        f"Artifact: {sanitize_artifact_name(facts.artifact_path)}\n\n"
         f"{len(leftover)} fact(s) that edgedoctor's rules could not explain:\n\n"
-        f"{_facts_payload(leftover)}\n\n"
+        f"{payload}\n\n"
         "Diagnose these if — and only if — the facts support a conclusion."
     )
 
