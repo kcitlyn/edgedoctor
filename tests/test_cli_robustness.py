@@ -234,3 +234,68 @@ class TestJsonHonoursTheExitCodeContract:
         human = runner.invoke(app, ["diagnose", target, "-b", backend])
         as_json = runner.invoke(app, ["diagnose", target, "-b", backend, "--json"])
         assert human.exit_code == as_json.exit_code
+
+
+class TestUsageErrorMessagesAreSpecific:
+    """A usage error must say what the user did wrong, not just that it failed.
+
+    Both checks below exit 1 either way — the later `is not a regular file` guard
+    catches a directory too. Their value is entirely in the MESSAGE: "is a
+    directory, not a log file" tells someone they passed the wrong kind of path;
+    "is not a regular file" leaves them guessing.
+
+    Found by mutation testing: disabling either check broke no test, because the
+    assertions only checked the exit code and a loose substring.
+    """
+
+    def test_a_directory_is_named_as_a_directory(self, artifacts):
+        result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
+        assert result.exit_code == 1
+        # The specific wording, not merely the word "directory" appearing
+        # somewhere in a path that might itself contain it.
+        assert "is a directory, not a log file" in result.output, (
+            f"unhelpful message: {result.output[-120:]!r}"
+        )
+
+    def test_a_directory_is_not_reported_as_merely_irregular(self, artifacts):
+        result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
+        assert "is not a regular file" not in result.output, (
+            "the generic fallback fired instead of the specific directory check"
+        )
+
+    @pytest.mark.parametrize("command", ["diagnose", "parse"])
+    def test_both_commands_give_the_specific_message(self, artifacts, command):
+        result = runner.invoke(app, [command, str(artifacts["directory"])])
+        assert "is a directory, not a log file" in result.output
+
+    @pytest.mark.skipif(os.geteuid() == 0, reason="root bypasses permissions")
+    @pytest.mark.parametrize("command", ["diagnose", "parse"])
+    def test_an_unreadable_file_is_a_usage_error_not_a_finding(self, tmp_path, command):
+        """Exit 1, not 2 — a permissions problem is not a failed model.
+
+        typer/click's Path type checks readability itself and raises a UsageError,
+        which exits 2 — the code this tool reserves for "errors found in the log".
+        A CI job would then treat a chmod mistake as a broken model. We pass
+        readable=False to take that check over so the contract holds.
+        """
+        secret = tmp_path / "secret.log"
+        secret.write_text("content")
+        secret.chmod(0o000)
+        try:
+            result = runner.invoke(app, [command, str(secret)])
+            assert result.exit_code == 1, (
+                f"exit {result.exit_code}: an unreadable file must be a usage "
+                "error (1), not a diagnosis result (2)"
+            )
+            lowered = result.output.lower()
+            assert "permission denied" in lowered, (
+                f"cause not explained: {result.output[-160:]!r}"
+            )
+            assert "not found" not in lowered, "must not blame a missing file"
+        finally:
+            secret.chmod(stat.S_IRUSR | stat.S_IWUSR)
+
+    def test_a_missing_file_is_named_as_missing(self, tmp_path):
+        result = runner.invoke(app, ["diagnose", str(tmp_path / "nope.log")])
+        assert result.exit_code == 1
+        assert "file not found" in result.output.lower()

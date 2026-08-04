@@ -120,7 +120,15 @@ def _require_readable_file(artifact: Path) -> None:
 @app.command()
 def diagnose(
     artifact: Path = typer.Argument(
-        ..., help="Build log or artifact to diagnose (e.g. build.log)."
+        ...,
+        help="Build log or artifact to diagnose (e.g. build.log).",
+        # readable=False disables typer/click's own permission check, which
+        # would otherwise raise a UsageError and exit 2 — the code this tool
+        # reserves for "errors were found in the log". A file we cannot open is
+        # a usage problem (exit 1), and conflating the two would make a CI job
+        # treat a permissions mistake as a failed model. _require_readable_file
+        # below does the check and reports it correctly.
+        readable=False,
     ),
     backend: BackendName = typer.Option(
         BackendName.tensorrt, "--backend", "-b", help="Target edge backend."
@@ -222,7 +230,9 @@ def diagnose(
 @app.command()
 def parse(
     artifact: Path = typer.Argument(
-        ..., help="Raw artifact to parse (e.g. a trtexec build log)."
+        ...,
+        help="Raw artifact to parse (e.g. a trtexec build log).",
+        readable=False,  # see the note on diagnose(); we report this ourselves
     ),
     backend: BackendName = typer.Option(
         BackendName.tensorrt, "--backend", "-b", help="Backend that produced the artifact."

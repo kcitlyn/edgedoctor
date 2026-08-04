@@ -258,3 +258,57 @@ class TestParserProperties:
 )
 def test_snapshot(log, snapshot):
     assert parse_fixture(log).model_dump() == snapshot
+
+
+class TestDecodeThrottledRejectsImpossibleInput:
+    """A bitfield cannot be negative, and must not be treated as if it could.
+
+    Python's two's complement makes `-1 & (1 << bit)` true for EVERY bit, so a
+    negative value decodes as "undervoltage, frequency capping, throttling AND
+    the soft temperature limit, all active and all previously occurred" — a
+    fabricated hardware emergency — with a nonsensical `0x-1` label.
+
+    The parser's own regex cannot produce a negative, but decode_throttled is
+    exported and callable directly, so it refuses rather than trusting its
+    caller. Found by mutation testing: removing the guard broke nothing, because
+    the guard had been verified by hand and never pinned by a test.
+    """
+
+    @pytest.mark.parametrize("value", [-1, -2, -0x50005, -(2**40)])
+    def test_negative_values_raise(self, value):
+        with pytest.raises(ValueError, match="cannot be negative"):
+            decode_throttled(value)
+
+    @pytest.mark.parametrize("value", [1.5, "0x5", None, [5], {"a": 1}, b"5"])
+    def test_non_integers_raise(self, value):
+        with pytest.raises(TypeError, match="must be an int"):
+            decode_throttled(value)
+
+    def test_booleans_are_rejected(self):
+        # bool subclasses int, so True would otherwise silently decode as 0x1
+        # ("undervoltage detected") — a fabricated fault from a type slip.
+        with pytest.raises(TypeError, match="must be an int"):
+            decode_throttled(True)
+
+    def test_zero_is_valid_and_healthy(self):
+        # The boundary: 0 is a real, meaningful reading.
+        assert decode_throttled(0)["healthy"] is True
+
+    def test_large_positive_values_are_accepted(self):
+        # A wider future firmware field must not be rejected outright.
+        decoded = decode_throttled(2**40)
+        assert decoded["unknown_bits"] == [40]
+
+    def test_the_error_explains_why(self):
+        # A bare exception would leave a caller guessing.
+        with pytest.raises(ValueError) as exc:
+            decode_throttled(-1)
+        assert "every condition set at once" in str(exc.value)
+
+    def test_a_negative_value_can_never_reach_the_decoder_via_parsing(self):
+        # Defence in depth: confirm the regex genuinely cannot pass one through,
+        # so the guard is a backstop rather than the only protection.
+        for line in ("throttled=-1", "throttled= -1", "throttled=0x-1",
+                     "throttled=-0x5"):
+            facts = parser.parse_text(line, artifact_name="t.log")
+            assert "throttle_active" not in kinds_in(facts), line
