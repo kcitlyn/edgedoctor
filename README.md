@@ -91,6 +91,15 @@ must not change the verdict. Exit codes: `0` clean · `1` usage/tool error ·
 > own log, verbatim. If edgedoctor doesn't have the evidence, it says so — it
 > does **not** guess.
 
+**Secrets are masked by default.** Build logs contain credentials — a
+private-registry fetch, an exported token — and reports get pasted into issues and
+CI output. Probable secrets are replaced with a visible marker
+(`https://ci:[REDACTED:url-credentials]@registry/x`), the redaction is announced
+so evidence is never altered silently, and control characters from untrusted logs
+are neutralized so a crafted log cannot repaint your terminal. `--no-redact` shows
+raw values for your own private logs. Detection is pattern-based and therefore
+incomplete — see [SECURITY.md](SECURITY.md) for the threat model and limits.
+
 ---
 
 ## The optional LLM layer (`--llm`)
@@ -208,4 +217,4 @@ $ edgedoctor diagnose build.log
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). Security policy and threat model: [SECURITY.md](SECURITY.md).

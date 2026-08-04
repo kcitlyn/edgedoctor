@@ -23,6 +23,7 @@ from rich.console import Console
 
 from . import __version__
 from .backends.base import Diagnosis, Facts
+from .redact import sanitize_for_display, strip_control_chars
 
 # Max evidence blocks printed per diagnosis before the rest are summarized.
 # 4 keeps a diagnosis readable on one screen while still showing the primary
@@ -74,7 +75,12 @@ def _oneline(text: str, limit: int = MAX_MESSAGE_CHARS) -> str:
     Carriage returns are stripped too — on a terminal, `\\r` rewinds to the line
     start, so trailing text can visually overwrite what preceded it.
     """
-    flattened = " ".join(str(text).split())
+    # Control characters are neutralized FIRST. A message can contain
+    # log-derived data — rule messages interpolate parsed values like an op
+    # name, and the LLM builds messages from log content — so an ANSI escape
+    # from an untrusted log reaches this line and would otherwise repaint the
+    # terminal from the report's own header.
+    flattened = " ".join(strip_control_chars(str(text)).split())
     if len(flattened) <= limit:
         return flattened
     return f"{flattened[:limit]}… (truncated, use --json for the full text)"
@@ -91,9 +97,19 @@ def render_human(
     diagnoses: list[Diagnosis],
     facts: Facts,
     console: Console | None = None,
+    *,
+    redact: bool = True,
 ) -> None:
-    """Print the rustc-style report to the console."""
+    """Print the rustc-style report to the console.
+
+    `redact` masks probable secrets in the evidence excerpts. On by default,
+    because a build log routinely contains credentials and a report gets pasted
+    into issues, CI output and chat — see edgedoctor.redact for the reasoning.
+    Control characters are neutralized unconditionally, since a raw ANSI escape
+    from an untrusted log can repaint the terminal and misrepresent the verdict.
+    """
     con = console or Console()
+    redacted_kinds: set[str] = set()
 
     if not diagnoses:
         con.print("[dim]No known failure patterns matched.[/dim]")
@@ -155,8 +171,15 @@ def render_human(
                 # core promise that evidence is verbatim. Covered by
                 # tests/test_report.py::TestEvidenceIsVerbatim.
                 con.print(f"[dim]{lineno:>4}[/dim] | ", end="")
+                # Sanitized before printing: the excerpt is untrusted log text.
+                # Secrets are masked with a visible marker (never blanked, so the
+                # reader can see an alteration happened), and control characters
+                # are escaped so they cannot repaint the terminal. The stored Fact
+                # keeps the original, so `file:line` traceability is unaffected.
+                safe, kinds = sanitize_for_display(fact.excerpt, redact=redact)
+                redacted_kinds.update(kinds)
                 con.print(
-                    _clip(fact.excerpt), markup=False, highlight=False, soft_wrap=True
+                    _clip(safe), markup=False, highlight=False, soft_wrap=True
                 )
                 con.print("   [dim]|[/dim]")
 
@@ -232,8 +255,59 @@ def render_human(
     con.print(f"[bold]summary:[/bold] {', '.join(parts)} · "
               f"parsed {len(facts.facts)} fact(s) from {facts.artifact_path}")
 
+    # Redaction is ANNOUNCED, never silent. The tool's core promise is that the
+    # evidence shown is the user's own log verbatim, so any alteration has to be
+    # visible — otherwise a reader could not tell a masked line from a real one.
+    # Naming the kinds also tells them a credential is sitting in that log and
+    # needs rotating, which is more actionable than the redaction itself.
+    if redacted_kinds:
+        kinds = ", ".join(sorted(redacted_kinds))
+        con.print(
+            f"[yellow]note:[/yellow] redacted probable secret(s) in the evidence "
+            f"above ({kinds}). The log itself still contains them — rotate the "
+            f"credential and scrub the log."
+        )
 
-def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
+
+def redacted_facts(facts: Facts) -> tuple[Facts, list[str]]:
+    """A copy of `facts` with secrets masked in every excerpt and summary.
+
+    Returns the copy plus the secret kinds found, so a caller can record what was
+    masked. Applied to machine-readable output as well as the human report,
+    because `--json` is the path that feeds CI artifacts and AI agents — the two
+    places a credential is most likely to be persisted or forwarded onward.
+
+    A COPY is made deliberately: the in-memory Facts keep the original text, so
+    nothing about parsing, matching or `file:line` traceability changes. Only
+    what leaves the process is masked.
+    """
+    kinds: set[str] = set()
+    masked = []
+    for fact in facts.facts:
+        excerpt, found = sanitize_for_display(fact.excerpt)
+        kinds.update(found)
+        summary, found = sanitize_for_display(fact.summary)
+        kinds.update(found)
+        data = fact.data
+        if data:
+            # Structured payloads carry parsed substrings too — an op name or a
+            # URL pulled out of the line — so they need the same treatment.
+            cleaned: dict[str, object] = {}
+            for key, value in data.items():
+                if isinstance(value, str):
+                    value, found = sanitize_for_display(value)
+                    kinds.update(found)
+                cleaned[key] = value
+            data = cleaned
+        masked.append(fact.model_copy(update={
+            "excerpt": excerpt, "summary": summary, "data": data,
+        }))
+    return facts.model_copy(update={"facts": masked}), sorted(kinds)
+
+
+def render_json(
+    diagnoses: list[Diagnosis], facts: Facts, *, redact: bool = True
+) -> str:
     """Serialize to the machine-readable JSON report format.
 
     Emits SPEC-COMPLIANT JSON. Two of Python's json defaults would otherwise
@@ -249,11 +323,28 @@ def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
         Coercing to str keeps the report producible; parsers should emit native
         types, but the output path must not depend on their doing so.
     """
+    secret_kinds: list[str] = []
+    if redact:
+        facts, secret_kinds = redacted_facts(facts)
+        diagnoses = [
+            d.model_copy(update={
+                "message": _oneline(d.message, limit=MAX_MESSAGE_CHARS),
+                "root_cause": strip_control_chars(d.root_cause),
+            })
+            for d in diagnoses
+        ]
+
     report = {
         "schemaVersion": 1,
         "tool": {"name": "edgedoctor", "version": __version__},
         "backend": facts.backend,
         "artifact": facts.artifact_path,
+        # Declared explicitly so a consumer never has to guess whether the
+        # excerpts it received are verbatim. Silently masking would be worse than
+        # not masking: a tool diffing against the source file would report a
+        # mismatch it cannot explain.
+        "redacted": redact,
+        "secretsDetected": secret_kinds,
         "diagnostics": [d.model_dump() for d in diagnoses],
         "facts": [f.model_dump() for f in facts.facts],
     }
