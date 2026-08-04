@@ -1,117 +1,117 @@
-2026-08-03 17:02:03.875 python3[27913:4089634] 2026-08-03 17:02:03.873693 [I:onnxruntime:, inference_session.cc:732 TraceSessionOptions] Session Options {  execution_mode:0 execution_order:DEFAULT enable_profiling:0 optimized_model_filepath:"" enable_mem_pattern:1 enable_mem_reuse:1 enable_cpu_mem_arena:1 profile_file_prefix:onnxruntime_profile_ session_logid: session_log_severity_level:0 session_log_verbosity_level:1 max_num_graph_transformation_steps:10 graph_optimization_level:4 intra_op_param:OrtThreadPoolParams { thread_pool_size: 0 auto_set_affinity: 0 allow_spinning: 1 spin_duration_us: -1 spin_backoff_max: 1 dynamic_block_base_: 0 stack_size: 0 affinity_str:  set_denormal_as_zero: 0 } inter_op_param:OrtThreadPoolParams { thread_pool_size: 0 auto_set_affinity: 0 allow_spinning: 1 spin_duration_us: -1 spin_backoff_max: 1 dynamic_block_base_: 0 stack_size: 0 affinity_str:  set_denormal_as_zero: 0 } use_per_session_threads:1 thread_pool_allow_spinning:1 use_deterministic_compute:0 ep_selection_policy:0 config_options: {  } }
-2026-08-03 17:02:03.876 python3[27913:4089634] 2026-08-03 17:02:03.876072 [I:onnxruntime:, inference_session.cc:499 operator()] Flush-to-zero and denormal-as-zero are off
-2026-08-03 17:02:03.876 python3[27913:4089634] 2026-08-03 17:02:03.876106 [I:onnxruntime:, inference_session.cc:507 ConstructorCommon] Creating and using per session threadpools since use_per_session_threads_ is true
-2026-08-03 17:02:03.876 python3[27913:4089634] 2026-08-03 17:02:03.876137 [I:onnxruntime:, inference_session.cc:552 ConstructorCommon] Dynamic block base set to 0
-2026-08-03 17:02:03.891 python3[27913:4089634] 2026-08-03 17:02:03.891313 [I:onnxruntime:, inference_session.cc:2313 Initialize] Initializing session.
-2026-08-03 17:02:03.893 python3[27913:4089634] 2026-08-03 17:02:03.893504 [I:onnxruntime:, graph_partitioner.cc:1392 InlineFunctionsAOT] This model does not have any local functions defined. AOT Inlining is not performed
-2026-08-03 17:02:03.899 python3[27913:4089634] 2026-08-03 17:02:03.899850 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EnsureUniqueDQForNodeUnit modified: 0 with status: OK
-2026-08-03 17:02:03.899 python3[27913:4089634] 2026-08-03 17:02:03.899950 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level1_RuleBasedTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.899 python3[27913:4089634] 2026-08-03 17:02:03.899982 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DoubleQDQPairsRemover modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900019 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConstantSharing modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900098 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer CommonSubexpressionElimination modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900127 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConstantFolding modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900153 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900174 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ReshapeFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900191 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FreeDimensionOverrideTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900211 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SliceConcatToSpaceToDepthFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900227 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL1 modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900247 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL1 modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900290 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQPropagationTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900319 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer WeightBiasQuantization modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900339 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EnsureUniqueDQForNodeUnit modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900358 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer WhereDummyDq modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900425 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer TransposeOptimizer modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900637 [I:onnxruntime:, inference_session.cc:1690 TransformGraph] Running graph optimizations in loop 1 time/s (Graph Optimizations Loop Level : 1)
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900663 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level2_RuleBasedTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900709 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer TransposeOptimizer_CPUExecutionProvider modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900748 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQSelectorActionTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900769 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GemmActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900789 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulIntegerToFloatFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900808 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DynamicQuantizeMatMulFusion modified: 0 with status: OK
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900827 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900861 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900884 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900905 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900925 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900944 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900962 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.900 python3[27913:4089634] 2026-08-03 17:02:03.900980 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.900999 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901018 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvActivationFusion modified: 1 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901386 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL2 modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901410 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL2 modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901430 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SimplifiedLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901453 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer AttentionFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901470 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EmbedLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901497 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherSliceToSplitFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901518 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherToSliceFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901539 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatmulTransposeFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901560 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901578 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GroupQueryAttentionFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901595 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901612 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SkipLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901630 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSkipLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901649 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FastGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901666 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QuickGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901683 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSoftmaxFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901701 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasDropoutFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901723 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulScaleFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901740 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901766 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901784 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsMlpFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901802 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsQkvFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901820 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQFinalCleanupTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901843 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level2_RuleBasedTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901873 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQSelectorActionTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901890 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GemmActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901908 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulIntegerToFloatFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901925 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DynamicQuantizeMatMulFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901947 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901964 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL2 modified: 0 with status: OK
-2026-08-03 17:02:03.901 python3[27913:4089634] 2026-08-03 17:02:03.901976 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL2 modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.901993 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SimplifiedLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902010 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer AttentionFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902026 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EmbedLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902047 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherSliceToSplitFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902064 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherToSliceFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902080 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatmulTransposeFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902096 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902113 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GroupQueryAttentionFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902129 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902146 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SkipLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902162 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSkipLayerNormFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902179 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FastGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902196 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QuickGeluFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902221 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSoftmaxFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902238 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasDropoutFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902255 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulScaleFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902272 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902292 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902308 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsMlpFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902325 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsQkvFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902341 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQFinalCleanupTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902380 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer NhwcTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902400 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902423 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902445 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902464 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902483 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902505 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902524 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902548 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902566 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvAddActivationFusion modified: 1 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902805 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer NhwcTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902831 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvAddActivationFusion modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902871 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer RemoveDuplicateCastTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902885 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer CastFloat16Transformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902902 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FuseFp16InitializerToFp32NodeTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902922 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MemcpyTransformer modified: 0 with status: OK
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902952 [V:onnxruntime:, session_state.cc:1347 VerifyEachNodeIsAssignedToAnEp] Node placements
-2026-08-03 17:02:03.902 python3[27913:4089634] 2026-08-03 17:02:03.902966 [V:onnxruntime:, session_state.cc:1350 VerifyEachNodeIsAssignedToAnEp]  All nodes placed on [CPUExecutionProvider]. Number of nodes: 24
-2026-08-03 17:02:03.903 python3[27913:4089634] 2026-08-03 17:02:03.903023 [V:onnxruntime:, session_state.cc:183 CreateGraphInfo] SaveMLValueNameIndexMapping
-2026-08-03 17:02:03.903 python3[27913:4089634] 2026-08-03 17:02:03.903053 [V:onnxruntime:, session_state.cc:229 CreateGraphInfo] Done saving OrtValue mappings.
-2026-08-03 17:02:03.903 python3[27913:4089634] 2026-08-03 17:02:03.903072 [I:onnxruntime:, allocation_planner.cc:2653 CreateGraphPartitioner] Use DeviceBasedPartition as default
-2026-08-03 17:02:03.903 python3[27913:4089634] 2026-08-03 17:02:03.903202 [I:onnxruntime:, session_state_utils.cc:249 SaveInitializedTensors] Saving initialized tensors.
-2026-08-03 17:02:03.903 python3[27913:4089634] 2026-08-03 17:02:03.903266 [I:onnxruntime:, session_state_utils.cc:445 SaveInitializedTensors] Done saving initialized tensors
-2026-08-03 17:02:03.904 python3[27913:4089634] 2026-08-03 17:02:03.904057 [I:onnxruntime:, inference_session.cc:2793 Initialize] Session successfully initialized.
+2026-08-03 18:45:14.083 python3[45940:4235707] 2026-08-03 18:45:14.081297 [I:onnxruntime:, inference_session.cc:732 TraceSessionOptions] Session Options {  execution_mode:0 execution_order:DEFAULT enable_profiling:0 optimized_model_filepath:"" enable_mem_pattern:1 enable_mem_reuse:1 enable_cpu_mem_arena:1 profile_file_prefix:onnxruntime_profile_ session_logid: session_log_severity_level:0 session_log_verbosity_level:1 max_num_graph_transformation_steps:10 graph_optimization_level:4 intra_op_param:OrtThreadPoolParams { thread_pool_size: 0 auto_set_affinity: 0 allow_spinning: 1 spin_duration_us: -1 spin_backoff_max: 1 dynamic_block_base_: 0 stack_size: 0 affinity_str:  set_denormal_as_zero: 0 } inter_op_param:OrtThreadPoolParams { thread_pool_size: 0 auto_set_affinity: 0 allow_spinning: 1 spin_duration_us: -1 spin_backoff_max: 1 dynamic_block_base_: 0 stack_size: 0 affinity_str:  set_denormal_as_zero: 0 } use_per_session_threads:1 thread_pool_allow_spinning:1 use_deterministic_compute:0 ep_selection_policy:0 config_options: {  } }
+2026-08-03 18:45:14.083 python3[45940:4235707] 2026-08-03 18:45:14.083160 [I:onnxruntime:, inference_session.cc:499 operator()] Flush-to-zero and denormal-as-zero are off
+2026-08-03 18:45:14.083 python3[45940:4235707] 2026-08-03 18:45:14.083191 [I:onnxruntime:, inference_session.cc:507 ConstructorCommon] Creating and using per session threadpools since use_per_session_threads_ is true
+2026-08-03 18:45:14.083 python3[45940:4235707] 2026-08-03 18:45:14.083218 [I:onnxruntime:, inference_session.cc:552 ConstructorCommon] Dynamic block base set to 0
+2026-08-03 18:45:14.096 python3[45940:4235707] 2026-08-03 18:45:14.096246 [I:onnxruntime:, inference_session.cc:2313 Initialize] Initializing session.
+2026-08-03 18:45:14.098 python3[45940:4235707] 2026-08-03 18:45:14.098172 [I:onnxruntime:, graph_partitioner.cc:1392 InlineFunctionsAOT] This model does not have any local functions defined. AOT Inlining is not performed
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102540 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EnsureUniqueDQForNodeUnit modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102586 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level1_RuleBasedTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102611 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DoubleQDQPairsRemover modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102637 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConstantSharing modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102698 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer CommonSubexpressionElimination modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102722 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConstantFolding modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102744 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102764 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ReshapeFusion modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102779 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FreeDimensionOverrideTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102798 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SliceConcatToSpaceToDepthFusion modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102812 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL1 modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102830 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL1 modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102858 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQPropagationTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102881 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer WeightBiasQuantization modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102899 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EnsureUniqueDQForNodeUnit modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102917 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer WhereDummyDq modified: 0 with status: OK
+2026-08-03 18:45:14.102 python3[45940:4235707] 2026-08-03 18:45:14.102969 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer TransposeOptimizer modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103153 [I:onnxruntime:, inference_session.cc:1690 TransformGraph] Running graph optimizations in loop 1 time/s (Graph Optimizations Loop Level : 1)
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103177 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level2_RuleBasedTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103218 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer TransposeOptimizer_CPUExecutionProvider modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103254 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQSelectorActionTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103273 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GemmActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103291 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulIntegerToFloatFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103308 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DynamicQuantizeMatMulFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103327 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103354 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103375 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103394 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103412 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103431 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103448 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103466 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103484 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103502 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvActivationFusion modified: 1 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103823 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL2 modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103843 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL2 modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103861 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SimplifiedLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103882 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer AttentionFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103899 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EmbedLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103924 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherSliceToSplitFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103941 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherToSliceFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103960 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatmulTransposeFusion modified: 0 with status: OK
+2026-08-03 18:45:14.103 python3[45940:4235707] 2026-08-03 18:45:14.103980 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.103996 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GroupQueryAttentionFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104013 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104029 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SkipLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104046 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSkipLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104064 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FastGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104080 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QuickGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104097 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSoftmaxFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104114 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasDropoutFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104133 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulScaleFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104150 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104175 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104193 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsMlpFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104210 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsQkvFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104226 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQFinalCleanupTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104248 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer Level2_RuleBasedTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104274 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQSelectorActionTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104291 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GemmActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104308 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulIntegerToFloatFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104324 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer DynamicQuantizeMatMulFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104345 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104361 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GeluFusionL2 modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104373 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer LayerNormFusionL2 modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104389 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SimplifiedLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104405 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer AttentionFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104421 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer EmbedLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104442 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherSliceToSplitFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104458 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GatherToSliceFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104474 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatmulTransposeFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104490 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104507 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer GroupQueryAttentionFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104522 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulAddFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104538 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer SkipLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104554 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSkipLayerNormFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104571 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FastGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104587 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QuickGeluFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104610 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasSoftmaxFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104626 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer BiasDropoutFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104643 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulScaleFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104659 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104678 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104694 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsMlpFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104710 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MatMulNBitsQkvFusion modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104726 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer QDQFinalCleanupTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104761 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer NhwcTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104779 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104801 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104820 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104839 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104857 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104877 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104896 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104914 [V:onnxruntime:, selector_action_transformer.cc:126 MatchAndProcess] Matched Conv
+2026-08-03 18:45:14.104 python3[45940:4235707] 2026-08-03 18:45:14.104931 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvAddActivationFusion modified: 1 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105154 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer NhwcTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105179 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer ConvAddActivationFusion modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105217 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer RemoveDuplicateCastTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105230 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer CastFloat16Transformer modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105246 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer FuseFp16InitializerToFp32NodeTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105265 [I:onnxruntime:, graph_transformer.cc:15 Apply] GraphTransformer MemcpyTransformer modified: 0 with status: OK
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105292 [V:onnxruntime:, session_state.cc:1347 VerifyEachNodeIsAssignedToAnEp] Node placements
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105305 [V:onnxruntime:, session_state.cc:1350 VerifyEachNodeIsAssignedToAnEp]  All nodes placed on [CPUExecutionProvider]. Number of nodes: 24
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105357 [V:onnxruntime:, session_state.cc:183 CreateGraphInfo] SaveMLValueNameIndexMapping
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105386 [V:onnxruntime:, session_state.cc:229 CreateGraphInfo] Done saving OrtValue mappings.
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105404 [I:onnxruntime:, allocation_planner.cc:2653 CreateGraphPartitioner] Use DeviceBasedPartition as default
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105548 [I:onnxruntime:, session_state_utils.cc:249 SaveInitializedTensors] Saving initialized tensors.
+2026-08-03 18:45:14.105 python3[45940:4235707] 2026-08-03 18:45:14.105606 [I:onnxruntime:, session_state_utils.cc:445 SaveInitializedTensors] Done saving initialized tensors
+2026-08-03 18:45:14.106 python3[45940:4235707] 2026-08-03 18:45:14.106930 [I:onnxruntime:, inference_session.cc:2793 Initialize] Session successfully initialized.
 SESSION_PROVIDERS: CPUExecutionProvider

@@ -256,7 +256,7 @@ def main() -> None:
     # A parser that reports fallback here is hallucinating. This is the
     # ORT-side equivalent of the divergence corpus's clean baseline.
     if accel:
-        print(f"\n[1/9] All nodes on one EP ({accel})")
+        print(f"\n[1/10] All nodes on one EP ({accel})")
         log = args.out / "ort_all_nodes_one_ep.log"
         _run_session(resnet, [accel, "CPUExecutionProvider"], log)
         _sidecar(
@@ -271,11 +271,11 @@ def main() -> None:
             "n/a — this is the desired state.",
         )
     else:
-        print("\n[1/9] SKIPPED — no accelerator EP available on this host")
+        print("\n[1/10] SKIPPED — no accelerator EP available on this host")
 
     # ── 2. Partial fallback: the actual bug ──────────────────────────────
     if accel:
-        print(f"\n[2/9] Partial fallback ({accel} + CPU)")
+        print(f"\n[2/10] Partial fallback ({accel} + CPU)")
         partial = args.work / "partial_fallback.onnx"
         _make_partial_model(partial)
         log = args.out / "ort_partial_fallback.log"
@@ -299,7 +299,7 @@ def main() -> None:
     # ── 3. CPU-only: nothing to fall back FROM ───────────────────────────
     # Distinct from case 1: all-on-CPU is only a problem if you expected
     # acceleration. A rule must not treat a deliberate CPU session as a failure.
-    print("\n[3/9] CPU-only session")
+    print("\n[3/10] CPU-only session")
     log = args.out / "ort_cpu_only.log"
     _run_session(resnet, ["CPUExecutionProvider"], log)
     _sidecar(
@@ -318,7 +318,7 @@ def main() -> None:
     # ── 4. Requested EP not in this build ────────────────────────────────
     # Silent and expensive: you believe you are measuring accelerated
     # execution and you are measuring CPU.
-    print("\n[4/9] Missing/unavailable provider")
+    print("\n[4/10] Missing/unavailable provider")
     log = args.out / "ort_missing_provider.log"
     _run_session(resnet, ["TensorrtExecutionProvider", "CPUExecutionProvider"], log)
     _sidecar(
@@ -340,7 +340,7 @@ def main() -> None:
     # says whether that split actually cost anything, which is the question a
     # user actually has. Profiling requires RUNNING the model, so these steps
     # execute inference rather than just constructing a session.
-    print("\n[5/9] Profiling trace (CPU-only)")
+    print("\n[5/10] Profiling trace (CPU-only)")
     _run_session(resnet, ["CPUExecutionProvider"],
                  args.out / "ort_profile_cpu_session.log",
                  profile_to=args.out / "ort_profile_cpu.json")
@@ -367,7 +367,7 @@ def main() -> None:
     )
 
     if accel:
-        print(f"\n[6/9] Profiling trace (split across {accel} + CPU)")
+        print(f"\n[6/10] Profiling trace (split across {accel} + CPU)")
         partial = args.work / "partial_fallback.onnx"
         if not partial.exists():
             _make_partial_model(partial)
@@ -397,13 +397,13 @@ def main() -> None:
             "measured cost knowingly.",
         )
     else:
-        print("\n[6/9] SKIPPED — no accelerator EP for a split profile")
+        print("\n[6/10] SKIPPED — no accelerator EP for a split profile")
 
     # ── 7. Session construction FAILS ────────────────────────────────────
     # A corrupt model file. Distinct from every case above: no placement
     # happens at all, so no performance or provider conclusion can be drawn —
     # which is exactly what ED0304 says and why it must suppress ED0305.
-    print("\n[7/9] Session construction failure (corrupt model)")
+    print("\n[7/10] Session construction failure (corrupt model)")
     corrupt = args.work / "corrupt.onnx"
     corrupt.write_bytes(b"this is not a valid onnx protobuf " * 20)
     log = args.out / "ort_session_failed.log"
@@ -426,7 +426,7 @@ def main() -> None:
     # SUPPRESS the cost-attribution rules. Generated as a real trace rather
     # than hand-built, because the whole point is what ORT actually emits for
     # a single run.
-    print("\n[8/9] Single-iteration profiling trace (warm-up dominated)")
+    print("\n[8/10] Single-iteration profiling trace (warm-up dominated)")
     log = args.out / "ort_profile_one_iteration_session.log"
     _run_session(resnet, ["CPUExecutionProvider"], log,
                  profile_to=args.out / "ort_profile_one_iteration.json",
@@ -454,7 +454,7 @@ def main() -> None:
     # Exercises the "the provider covers little of this graph" rule, whose
     # >=3-distinct-ops threshold otherwise had no real-log coverage.
     if accel:
-        print(f"\n[9/9] Broad fallback ({accel}: many distinct unsupported ops)")
+        print(f"\n[9/10] Broad fallback ({accel}: many distinct unsupported ops)")
         many = args.work / "many_fallback.onnx"
         _make_many_fallback_model(many)
         log = args.out / "ort_many_fallback.log"
@@ -491,7 +491,38 @@ def main() -> None:
             "Remove or replace the unsupported ops to rejoin the partitions.",
         )
     else:
-        print("\n[9/9] SKIPPED — no accelerator EP for a broad-fallback case")
+        print("\n[9/10] SKIPPED — no accelerator EP for a broad-fallback case")
+
+    # ── 10. One provider missing, ANOTHER still works ────────────────────
+    # The distinction that keeps ED0302 honest. Requesting
+    # [TensorRT, CoreML, CPU] where TensorRT is absent looks superficially like
+    # ort_missing_provider.log — same "not in available provider names" warning —
+    # but the accelerator DID run, so reporting "the entire model ran on CPU"
+    # would be a false accusation. Without a real artifact, the guard that draws
+    # this distinction was only reachable via a hand-built log.
+    if accel:
+        print(f"\n[10/10] Provider missing but {accel} still active")
+        log = args.out / "ort_missing_provider_partial.log"
+        _run_session(resnet,
+                     ["TensorrtExecutionProvider", accel, "CPUExecutionProvider"],
+                     log)
+        _sidecar(
+            log,
+            "InferenceSession(resnet18.onnx, providers=[TensorrtExecutionProvider, "
+            f"{accel}, CPUExecutionProvider]) with log_severity_level=0",
+            "succeeded-with-warnings",
+            "TensorrtExecutionProvider is unavailable in this build and is "
+            f"dropped with a warning, but {accel} is present and claims the "
+            "graph — so the run is NOT silently degraded to CPU. Contrast with "
+            "ort_missing_provider.log, which carries the SAME unavailable-provider "
+            "warning but really did fall all the way back. Reporting this log as "
+            "'ran entirely on CPU' would be a false accusation, so it must "
+            "produce no ED0302.",
+            "Drop the unavailable provider from the list to silence the warning; "
+            "no performance action is needed.",
+        )
+    else:
+        print("\n[10/10] SKIPPED — no accelerator EP available")
 
     print(f"\nDone. Artifacts in {args.out}/")
     print("Inspect with: uv run edgedoctor parse <log> -b onnxruntime")
