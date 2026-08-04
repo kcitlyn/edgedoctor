@@ -460,3 +460,67 @@ class TestSummaryNeverContradictsTheReport:
         two = one * 2
         assert "1 error ·" in render(one, make_facts(self._fact()))
         assert "2 errors" in render(two, make_facts(self._fact()))
+
+
+class TestJsonRenderingIsTotal:
+    """render_json must ALWAYS produce a valid document.
+
+    A diagnostic tool that raises while reporting a problem is worse than
+    useless. `indent=2` forces json's pure-Python encoder (the C fast path only
+    handles the compact form), so pathologically nested data blows the stack
+    during encoding — reachable by a library caller even though real parsers nest
+    Fact.data only two levels deep.
+    """
+
+    def _deep_facts(self, depth: int, tail=None):
+        node: dict = {}
+        cursor = node
+        for _ in range(depth):
+            cursor["n"] = {}
+            cursor = cursor["n"]
+        if tail is not None:
+            cursor["value"] = tail
+        return Facts(
+            backend="x", artifact_path="t.log",
+            facts=[Fact(id="f1", kind="k", summary="s", source="t.log:1",
+                        data={"deep": node})],
+        )
+
+    def test_pathological_nesting_still_yields_valid_json(self):
+        output = render_json([], self._deep_facts(5000))
+        json.loads(output)  # must not raise
+
+    def test_pathological_nesting_with_a_non_finite_float(self):
+        # Hits both fallback paths at once: sanitize AND recursion.
+        output = render_json([], self._deep_facts(5000, tail=float("inf")))
+        json.loads(output)
+
+    def test_deep_nesting_prefers_a_complete_report_over_an_error_document(self):
+        # The first fallback drops indentation, which switches json to its C
+        # encoder and handles far deeper nesting — so the FULL report survives.
+        # Degrading to the error document is a last resort, not the normal path.
+        data = json.loads(render_json([], self._deep_facts(5000)))
+        assert "facts" in data, "should still produce a complete report"
+        assert "error" not in data
+
+    def test_the_error_document_is_honest_when_it_is_needed(self):
+        # Constructed to defeat both fallbacks: too deep for the Python encoder
+        # AND carrying a non-finite float, so the sanitize path must also recurse.
+        data = json.loads(render_json([], self._deep_facts(5000, tail=float("inf"))))
+        if "error" in data:
+            # Silently emitting an empty report would misrepresent the run.
+            assert data["factCount"] == 1
+            assert data["schemaVersion"] == 1
+        else:
+            # If it managed a full report, that's strictly better.
+            assert "facts" in data
+
+    def test_moderate_nesting_is_unaffected(self):
+        data = json.loads(render_json([], self._deep_facts(50)))
+        assert "error" not in data
+        assert data["facts"][0]["data"]["deep"]
+
+    def test_normal_output_is_still_pretty_printed(self):
+        facts = Facts(backend="x", artifact_path="t.log",
+                      facts=[Fact(id="f1", kind="k", summary="s", source="t.log:1")])
+        assert render_json([], facts).count("\n") > 3
