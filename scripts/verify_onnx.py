@@ -25,10 +25,15 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
-
 
 def verify(model_name: str = "mobilenet", atol: float = 1e-5, out_dir: Path = Path("artifacts")) -> None:
+    # numpy is imported HERE, not at module scope, for the same reason torch and
+    # onnxruntime are: `--help` must work on a machine that can't run the script.
+    # A generator that can't even explain itself without the full ML stack
+    # installed is needlessly hostile, and CI (which installs no heavy deps)
+    # checks exactly this.
+    import numpy as np
+
     try:
         import torch
         import onnxruntime as ort
