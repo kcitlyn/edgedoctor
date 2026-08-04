@@ -240,3 +240,73 @@ class TestRegistry:
 def test_snapshot(log, snapshot):
     """Golden-file layer. Regenerate deliberately: uv run pytest --snapshot-update"""
     assert parse_log(log).model_dump() == snapshot
+
+
+class TestSessionFailure:
+    """A real corrupt-model log — the one ORT case where the session fails.
+
+    Added because ED0304 and ED0305 referenced `session_failed` while no real
+    artifact produced it, so both rules were only ever tested against hand-built
+    Facts.
+    """
+
+    LOG = "ort_session_failed.log"
+
+    def test_detects_the_failure(self):
+        facts = parse_log(self.LOG)
+        assert "session_failed" in kinds_in(facts)
+
+    def test_records_the_error_text(self):
+        facts = parse_log(self.LOG)
+        assert fact_of(facts, "session_failed").data["error"]
+
+    def test_no_placement_facts_when_the_session_never_started(self):
+        # Nothing was placed, so any provider or fallback claim would be
+        # unfounded.
+        facts = parse_log(self.LOG)
+        placement = {"node_placement", "all_nodes_one_provider", "split_execution",
+                     "cpu_fallback_ops", "silent_cpu_only"}
+        assert not (kinds_in(facts) & placement)
+
+    def test_diagnoses_as_ed0304_only(self):
+        from edgedoctor.diagnoser import diagnose
+
+        codes = [d.code for d in diagnose(parse_log(self.LOG))]
+        assert "ED0304" in codes
+        # Must NOT claim a clean single-provider run.
+        assert "ED0305" not in codes
+
+
+class TestBroadFallback:
+    """A real log where five DISTINCT ops fall back across five partitions.
+
+    This is what exercises ED0303's >=3-distinct-ops threshold against reality;
+    previously only a hand-built Facts object did.
+    """
+
+    LOG = "ort_many_fallback.log"
+
+    def test_names_every_op_that_fell_back(self):
+        facts = parse_log(self.LOG)
+        ops = fact_of(facts, "cpu_fallback_ops")
+        assert ops.data["ops"] == ["Ceil", "Erf", "Floor", "Round", "Sign"]
+        assert ops.data["count"] == 5
+
+    def test_reports_many_partitions(self):
+        # Partition count is the performance-relevant number, and five
+        # boundaries is qualitatively worse than two.
+        facts = parse_log(self.LOG)
+        assert fact_of(facts, "provider_capability").data["partitions"] == 5
+
+    def test_accelerator_claims_only_half_the_graph(self):
+        facts = parse_log(self.LOG)
+        cap = fact_of(facts, "provider_capability")
+        assert cap.data["unsupported"] == 5
+        assert cap.data["supported"] == 5
+
+    def test_fires_the_broad_fallback_rule(self):
+        from edgedoctor.diagnoser import diagnose
+
+        codes = [d.code for d in diagnose(parse_log(self.LOG))]
+        assert "ED0303" in codes, "broad fallback should be diagnosed"
+        assert "ED0301" in codes, "and it is still a split graph"

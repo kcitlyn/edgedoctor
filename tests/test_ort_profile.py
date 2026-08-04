@@ -46,6 +46,11 @@ def codes(diagnoses) -> list[str]:
     return [d.code for d in diagnoses]
 
 
+def codes_of(facts) -> list[str]:
+    """Rule codes produced for an already-parsed Facts object."""
+    return codes(diagnose(facts))
+
+
 class TestParsesRealTrace:
     def test_reports_session_phases(self):
         facts = parse_trace(CPU_TRACE)
@@ -288,3 +293,69 @@ class TestParserProperties:
 @pytest.mark.parametrize("trace", [CPU_TRACE, SPLIT_TRACE])
 def test_snapshot(trace, snapshot):
     assert parse_trace(trace).model_dump() == snapshot
+
+
+class TestSingleIterationTrace:
+    """A REAL one-iteration profile, not a hand-built one.
+
+    ED0502 and its suppression of the cost rules previously had no real-artifact
+    coverage — the threshold was only ever checked against a synthetic Facts
+    object, so it was tested against an assumption about what ORT emits.
+    """
+
+    TRACE = "ort_profile_one_iteration.json"
+
+    def test_reports_a_single_iteration(self):
+        facts = parse_trace(self.TRACE)
+        assert fact_of(facts, "profile_summary").data["iterations"] == 1
+
+    def test_flags_the_thin_sample(self):
+        assert "few_iterations" in kinds_in(parse_trace(self.TRACE))
+
+    def test_warns_and_declines_to_attribute_cost(self):
+        codes = codes_of(parse_trace(self.TRACE))
+        assert "ED0502" in codes, "must warn about warm-up-dominated timings"
+        # The whole point: no cost attribution from a one-run sample, even
+        # though a dominant op is clearly present in the data.
+        assert "ED0501" not in codes
+        assert "ED0503" not in codes
+        assert "ED0504" not in codes
+
+    def test_the_dominant_op_is_still_measured_just_not_diagnosed(self):
+        # The parser records what it saw; only the RULES decline to conclude.
+        facts = parse_trace(self.TRACE)
+        assert any(f.kind == "op_cost" for f in facts.facts)
+
+
+class TestBroadFallbackProfile:
+    """The measured counterpart to ort_many_fallback.log.
+
+    Gives ED0503 (>=10% of node time on CPU) its first real-log coverage. The
+    two-partition trace sits at ~1% CPU and correctly does NOT warn, so without
+    this artifact the threshold was never exercised in the firing direction.
+    """
+
+    TRACE = "ort_many_fallback_profile.json"
+
+    def test_a_material_share_of_time_is_on_cpu(self):
+        facts = parse_trace(self.TRACE)
+        split = fact_of(facts, "provider_time_split")
+        assert split.data["cpu_share_pct"] >= 10, (
+            f"expected a material CPU share, got {split.data['cpu_share_pct']}%"
+        )
+
+    def test_warns_about_the_measured_cost_of_the_split(self):
+        assert "ED0503" in codes_of(parse_trace(self.TRACE))
+
+    def test_both_providers_appear_in_the_trace(self):
+        facts = parse_trace(self.TRACE)
+        assert fact_of(facts, "provider_time_split").data["provider_count"] >= 2
+
+    def test_contrasts_with_the_low_cpu_share_trace(self):
+        # The pair is the point: same KIND of split, opposite verdicts, decided
+        # by measured cost rather than by structure.
+        heavy = fact_of(parse_trace(self.TRACE), "provider_time_split")
+        light = fact_of(parse_trace(SPLIT_TRACE), "provider_time_split")
+        assert heavy.data["cpu_share_pct"] > light.data["cpu_share_pct"]
+        assert "ED0503" in codes_of(parse_trace(self.TRACE))
+        assert "ED0503" not in codes_of(parse_trace(SPLIT_TRACE))
