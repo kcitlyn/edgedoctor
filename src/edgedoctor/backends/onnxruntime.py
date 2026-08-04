@@ -135,15 +135,40 @@ _SIGNATURES: list[_Sig] = [
         lambda m: f"Session construction failed: {m['error']}",
     ),
     # ── Data movement inserted by the framework ───────────────────────────
-    # Memcpy nodes are ORT's stitching between EPs that don't share memory —
-    # direct evidence of a host/device boundary inside the graph.
+    # Memcpy nodes are ORT's stitching between EPs that don't share host memory:
+    # direct, quantified evidence of a host/device boundary inside the graph, and
+    # the thing that makes a split expensive rather than merely untidy.
+    #
+    # GROUNDED IN ORT'S SOURCE, after an earlier version was not. The pattern
+    # here previously matched "Add MemcpyFromHost/MemcpyToHost for N" and
+    # "Inserted N Memcpy node" — strings I reconstructed from memory that ORT
+    # never emits, so the signature could never have fired. The real message is
+    # assembled in core/optimizer/transformer_memcpy.cc (MemcpyTransformer::
+    # ApplyImpl) as:
+    #
+    #   <count> Memcpy nodes are added to the graph <graph name> for <provider>.
+    #   It might have negative impact on performance (including unable to run
+    #   CUDA graph). Set session_options.log_severity_level=1 to see the detail
+    #   logs before this message.
+    #
+    # It fires only when copy_node_counter > 0 AND the provider is the CUDA EP,
+    # so it CANNOT be reproduced on this machine (no CUDA) — which is exactly
+    # why the fabricated version went unnoticed. Marked as awaiting a real
+    # artifact from the ThinkPad rather than presented as verified.
     (
         "memcpy_nodes_added",
         re.compile(
-            r"Add MemcpyFromHost/MemcpyToHost for (?P<count>\d+)|"
-            r"Inserted (?P<count2>\d+) Memcpy node"
+            # Every quantifier BOUNDED. The leading `\d+` before a literal is
+            # the exact O(n^2) shape fixed elsewhere in this file; a long digit
+            # run made this take 1.6s at 20k chars. Caught by
+            # tests/test_parser_robustness.py the moment it was introduced.
+            r"(?P<count>\d{1,9}) Memcpy nodes are added to the graph\s{0,4}"
+            r"(?P<graph>\S{0,256})\s{1,4}for\s{1,4}(?P<provider>\S{1,64}?)\."
         ),
-        lambda m: "Memcpy node(s) inserted to bridge execution providers",
+        lambda m: (
+            f"{m['count']} Memcpy node(s) inserted for {m['provider']} — "
+            "tensors are being copied across a device boundary"
+        ),
     ),
     (
         "memcpy_transformer",

@@ -179,3 +179,134 @@ class TestBackendSelection:
         )
         assert result.exit_code == 0
         assert "no parser" not in result.output
+
+
+class TestJsonHonoursTheExitCodeContract:
+    """--json changes the FORMAT, never the verdict.
+
+    The `diagnose --json` path used to `raise typer.Exit(code=0)` unconditionally,
+    so a CI job piping the report to jq saw SUCCESS on a run that found errors —
+    silently breaking the documented contract in exactly the situation --json
+    exists to serve. The README advertises --json "for CI and AI agents" in the
+    same sentence as the exit codes, so the two must agree.
+    """
+
+    @pytest.mark.parametrize(
+        "fixture,expected",
+        [
+            ("tests/fixtures/tensorrt/unsupported_op_trt8.log", 2),  # has errors
+            ("tests/fixtures/tensorrt/success.log", 0),              # clean
+        ],
+    )
+    def test_json_and_human_exit_codes_agree(self, fixture, expected):
+        human = runner.invoke(app, ["diagnose", fixture])
+        as_json = runner.invoke(app, ["diagnose", fixture, "--json"])
+        assert human.exit_code == expected
+        assert as_json.exit_code == expected, (
+            "--json must not change the verdict"
+        )
+
+    def test_json_document_is_still_on_stdout_and_valid(self):
+        # Honouring the exit code must not break the document itself.
+        result = runner.invoke(
+            app, ["diagnose", "tests/fixtures/tensorrt/unsupported_op_trt8.log",
+                  "--json"]
+        )
+        data = json.loads(result.stdout)
+        assert data["schemaVersion"] == 1
+        assert data["diagnostics"]
+
+    def test_errors_found_is_distinguishable_from_a_tool_error(self):
+        # 2 means "the log has problems"; 1 means "edgedoctor could not run".
+        # A CI script must be able to tell those apart.
+        found = runner.invoke(
+            app, ["diagnose", "tests/fixtures/tensorrt/unsupported_op_trt8.log",
+                  "--json"]
+        )
+        broken = runner.invoke(app, ["diagnose", "no_such_file.log", "--json"])
+        assert found.exit_code == 2
+        assert broken.exit_code == 1
+
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_every_backend_agrees_across_formats(self, artifacts, backend):
+        # Whatever the backend, the two output modes must return the same code.
+        target = str(artifacts["empty"])
+        human = runner.invoke(app, ["diagnose", target, "-b", backend])
+        as_json = runner.invoke(app, ["diagnose", target, "-b", backend, "--json"])
+        assert human.exit_code == as_json.exit_code
+
+
+class TestUsageErrorMessagesAreSpecific:
+    """A usage error must say what the user did wrong, not just that it failed.
+
+    Both checks below exit 1 either way — the later `is not a regular file` guard
+    catches a directory too. Their value is entirely in the MESSAGE: "is a
+    directory, not a log file" tells someone they passed the wrong kind of path;
+    "is not a regular file" leaves them guessing.
+
+    Found by mutation testing: disabling either check broke no test, because the
+    assertions only checked the exit code and a loose substring.
+    """
+
+    @staticmethod
+    def _unwrapped(output: str) -> str:
+        """Collapse whitespace so assertions survive rich's line wrapping.
+
+        rich wraps to the terminal width, and CI's temp paths are much longer
+        than a local machine's — long enough to push a phrase across a line
+        boundary mid-word ("not a log\nfile"). Asserting on raw output made
+        these tests pass locally and fail in CI for no real reason.
+        """
+        return " ".join(output.split())
+
+    def test_a_directory_is_named_as_a_directory(self, artifacts):
+        result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
+        assert result.exit_code == 1
+        # The specific wording, not merely the word "directory" appearing
+        # somewhere in a path that might itself contain it.
+        assert "is a directory, not a log file" in self._unwrapped(result.output), (
+            f"unhelpful message: {result.output[-120:]!r}"
+        )
+
+    def test_a_directory_is_not_reported_as_merely_irregular(self, artifacts):
+        result = runner.invoke(app, ["diagnose", str(artifacts["directory"])])
+        assert "is not a regular file" not in self._unwrapped(result.output), (
+            "the generic fallback fired instead of the specific directory check"
+        )
+
+    @pytest.mark.parametrize("command", ["diagnose", "parse"])
+    def test_both_commands_give_the_specific_message(self, artifacts, command):
+        result = runner.invoke(app, [command, str(artifacts["directory"])])
+        assert "is a directory, not a log file" in self._unwrapped(result.output)
+
+    @pytest.mark.skipif(os.geteuid() == 0, reason="root bypasses permissions")
+    @pytest.mark.parametrize("command", ["diagnose", "parse"])
+    def test_an_unreadable_file_is_a_usage_error_not_a_finding(self, tmp_path, command):
+        """Exit 1, not 2 — a permissions problem is not a failed model.
+
+        typer/click's Path type checks readability itself and raises a UsageError,
+        which exits 2 — the code this tool reserves for "errors found in the log".
+        A CI job would then treat a chmod mistake as a broken model. We pass
+        readable=False to take that check over so the contract holds.
+        """
+        secret = tmp_path / "secret.log"
+        secret.write_text("content")
+        secret.chmod(0o000)
+        try:
+            result = runner.invoke(app, [command, str(secret)])
+            assert result.exit_code == 1, (
+                f"exit {result.exit_code}: an unreadable file must be a usage "
+                "error (1), not a diagnosis result (2)"
+            )
+            lowered = self._unwrapped(result.output).lower()
+            assert "permission denied" in lowered, (
+                f"cause not explained: {result.output[-160:]!r}"
+            )
+            assert "not found" not in lowered, "must not blame a missing file"
+        finally:
+            secret.chmod(stat.S_IRUSR | stat.S_IWUSR)
+
+    def test_a_missing_file_is_named_as_missing(self, tmp_path):
+        result = runner.invoke(app, ["diagnose", str(tmp_path / "nope.log")])
+        assert result.exit_code == 1
+        assert "file not found" in self._unwrapped(result.output).lower()

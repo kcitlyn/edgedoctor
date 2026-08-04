@@ -391,3 +391,79 @@ class TestPromptInjectionIsStructurallyDefeated:
         # Model complies with the injection and cites the fabricated id.
         client = FakeClient(parsed=one_diagnosis(evidence=["f99"]))
         assert synthesize(hostile, [], client=client) == []
+
+
+class TestBuildClient:
+    """The real client-construction path, which runs whenever --llm is used.
+
+    Previously verified only by hand and uncovered by tests, despite being the
+    code that decides whether synthesis happens at all in production. No network
+    call is made: constructing an Anthropic client is local.
+    """
+
+    def test_returns_none_without_a_key(self, monkeypatch):
+        from edgedoctor.llm import _build_client
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert _build_client() is None
+
+    def test_constructs_a_client_when_a_key_is_present(self, monkeypatch):
+        pytest.importorskip("anthropic", reason='needs: pip install "edgedoctor[llm]"')
+        from edgedoctor.llm import _build_client
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake-never-used")
+        client = _build_client()
+        assert client is not None
+        assert hasattr(client, "messages")
+
+    def test_uses_a_short_timeout_and_one_retry(self, monkeypatch):
+        # This is an optional enhancement to an otherwise-instant CLI; waiting a
+        # minute for it would be a regression, and retrying forever worse.
+        pytest.importorskip("anthropic")
+        from edgedoctor.llm import _build_client
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake-never-used")
+        client = _build_client()
+        assert client.timeout == 30.0
+        assert client.max_retries == 1
+
+    def test_returns_none_when_the_sdk_is_missing(self, monkeypatch):
+        # Simulates the [llm] extra not being installed.
+        import builtins
+
+        from edgedoctor.llm import _build_client
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "anthropic":
+                raise ImportError("no anthropic")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", fake_import)
+        assert _build_client() is None
+
+    def test_returns_none_if_construction_itself_raises(self, monkeypatch):
+        # A future SDK could reject our kwargs; that must degrade, not crash.
+        pytest.importorskip("anthropic")
+        import anthropic
+
+        from edgedoctor.llm import _build_client
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+
+        def boom(*args, **kwargs):
+            raise RuntimeError("SDK changed")
+
+        monkeypatch.setattr(anthropic, "Anthropic", boom)
+        assert _build_client() is None
+
+    def test_availability_reports_a_usable_state(self, monkeypatch):
+        pytest.importorskip("anthropic")
+        from edgedoctor.llm import availability
+
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+        ok, reason = availability()
+        assert ok is True
+        assert reason == ""

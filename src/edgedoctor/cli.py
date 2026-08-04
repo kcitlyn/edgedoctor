@@ -120,7 +120,15 @@ def _require_readable_file(artifact: Path) -> None:
 @app.command()
 def diagnose(
     artifact: Path = typer.Argument(
-        ..., help="Build log or artifact to diagnose (e.g. build.log)."
+        ...,
+        help="Build log or artifact to diagnose (e.g. build.log).",
+        # readable=False disables typer/click's own permission check, which
+        # would otherwise raise a UsageError and exit 2 — the code this tool
+        # reserves for "errors were found in the log". A file we cannot open is
+        # a usage problem (exit 1), and conflating the two would make a CI job
+        # treat a permissions mistake as a failed model. _require_readable_file
+        # below does the check and reports it correctly.
+        readable=False,
     ),
     backend: BackendName = typer.Option(
         BackendName.tensorrt, "--backend", "-b", help="Target edge backend."
@@ -189,16 +197,32 @@ def diagnose(
 
     if json_output:
         print(render_json(diagnoses, facts))
-        raise typer.Exit(code=0)
-
-    render_human(diagnoses, facts, console=out)
+        # Falls through to the SAME exit-code logic as the human path. It used to
+        # exit 0 unconditionally, which broke the documented contract in exactly
+        # the situation --json exists for: a CI job piping the report to jq saw
+        # success on a run that found errors. The report format must not change
+        # the verdict.
+    else:
+        render_human(diagnoses, facts, console=out)
 
     # Exit code per contract: 2 = errors found, 3 = warnings only, 0 = clean.
-    has_errors = any(d.severity == "error" for d in diagnoses)
-    has_warnings = any(d.severity == "warning" for d in diagnoses)
-    if has_errors:
+    #
+    # A SYNTHESIZED finding can never produce exit 2, only 3. The exit code is
+    # an API that CI gates branch on, and an LLM diagnosis is unreviewed and
+    # capped at medium confidence — letting one fail a build would contradict
+    # this layer's whole premise, documented in docs/adr/0001, that `--llm` can
+    # only ever add and never degrade a run. Capping at 3 keeps a genuine
+    # LLM-only finding visible to automation (it is not silently swallowed)
+    # while reserving the hard-failure code for curated, human-reviewed rules.
+    rule_diagnoses = [d for d in diagnoses if d.origin != "llm"]
+    has_rule_errors = any(d.severity == "error" for d in rule_diagnoses)
+    has_rule_warnings = any(d.severity == "warning" for d in rule_diagnoses)
+    # Any synthesized finding at all is worth a non-zero code, at warning level.
+    has_synthesized = len(diagnoses) != len(rule_diagnoses)
+
+    if has_rule_errors:
         raise typer.Exit(code=2)
-    elif has_warnings:
+    elif has_rule_warnings or has_synthesized:
         raise typer.Exit(code=3)
     raise typer.Exit(code=0)
 
@@ -206,7 +230,9 @@ def diagnose(
 @app.command()
 def parse(
     artifact: Path = typer.Argument(
-        ..., help="Raw artifact to parse (e.g. a trtexec build log)."
+        ...,
+        help="Raw artifact to parse (e.g. a trtexec build log).",
+        readable=False,  # see the note on diagnose(); we report this ourselves
     ),
     backend: BackendName = typer.Option(
         BackendName.tensorrt, "--backend", "-b", help="Backend that produced the artifact."

@@ -310,3 +310,54 @@ class TestBroadFallback:
         codes = [d.code for d in diagnose(parse_log(self.LOG))]
         assert "ED0303" in codes, "broad fallback should be diagnosed"
         assert "ED0301" in codes, "and it is still a split graph"
+
+
+class TestUnavailableProviderIsNotAlwaysSilentFallback:
+    """Same warning, opposite verdicts — the pair that keeps ED0302 honest.
+
+    Requesting [TensorRT, CoreML, CPU] where TensorRT is absent produces the SAME
+    "not in available provider names" warning as a run that fell all the way back
+    to CPU. But here CoreML claimed the graph, so the accelerator DID run.
+    Reporting "the entire model ran on CPU" would be a false accusation — worse
+    than saying nothing, because the user would go chasing an install problem
+    that isn't hurting them.
+
+    Found by mutation testing: weakening the guard to always fire broke no test,
+    because no real artifact had an unavailable provider ALONGSIDE a working one.
+    """
+
+    PARTIAL = "ort_missing_provider_partial.log"
+    FULL = "ort_missing_provider.log"
+
+    def test_the_unavailable_provider_is_still_recorded(self):
+        # The warning is real and worth surfacing; only the CONCLUSION differs.
+        facts = parse_log(self.PARTIAL)
+        unavailable = fact_of(facts, "provider_unavailable")
+        assert unavailable.data["requested"] == "TensorrtExecutionProvider"
+
+    def test_no_silent_fallback_when_another_accelerator_ran(self):
+        facts = parse_log(self.PARTIAL)
+        assert "silent_cpu_only" not in kinds_in(facts)
+
+    def test_the_session_really_did_get_an_accelerator(self):
+        facts = parse_log(self.PARTIAL)
+        providers = fact_of(facts, "session_providers").data["providers"]
+        assert providers != ["CPUExecutionProvider"]
+        assert any(p != "CPUExecutionProvider" for p in providers)
+
+    def test_no_false_accusation_is_diagnosed(self):
+        from edgedoctor.diagnoser import diagnose
+
+        assert "ED0302" not in [d.code for d in diagnose(parse_log(self.PARTIAL))]
+
+    def test_the_genuinely_degraded_run_still_fires_ed0302(self):
+        # The other half of the pair: the guard must not suppress a real finding.
+        from edgedoctor.diagnoser import diagnose
+
+        assert "ED0302" in [d.code for d in diagnose(parse_log(self.FULL))]
+
+    def test_both_logs_carry_the_same_warning(self):
+        # Proves the discrimination is real: the two are indistinguishable from
+        # the warning alone, so the test above is testing something.
+        for log in (self.PARTIAL, self.FULL):
+            assert "provider_unavailable" in kinds_in(parse_log(log))

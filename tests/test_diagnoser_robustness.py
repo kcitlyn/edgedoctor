@@ -240,3 +240,158 @@ class TestDiagnoseWithOddFacts:
         start = time.monotonic()
         diagnose(facts)
         assert time.monotonic() - start < 5.0
+
+
+class TestSeverityOrderingIsEnforced:
+    """Errors must be listed before warnings before info.
+
+    A reader skims top-down, so the most serious finding has to come first. No
+    committed artifact exercises this today — every rule file happens to be
+    AUTHORED in severity order, so removing the sort changes nothing about
+    current output. That makes it a latent regression: the day someone appends an
+    error-severity rule below an info one, the report silently starts burying it.
+
+    Found by mutation testing: replacing the sort key with a constant broke no
+    test.
+    """
+
+    def _rules(self, rules_dir, body: str):
+        (rules_dir / "probe.yaml").write_text(body)
+
+    def test_error_is_sorted_before_info_regardless_of_file_order(self, rules_dir):
+        # Deliberately declared info-first, the opposite of every real file.
+        self._rules(rules_dir, """
+- id: ED_INFO
+  severity: info
+  requires: [cpu_fallback]
+  message: an informational note
+- id: ED_ERROR
+  severity: error
+  requires: [cpu_fallback]
+  message: a serious error
+""")
+        severities = [d.severity for d in diagnose(facts_for())]
+        assert severities == ["error", "info"], (
+            f"got {severities}; the error must be reported first"
+        )
+
+    def test_full_ordering_is_error_warning_info(self, rules_dir):
+        self._rules(rules_dir, """
+- id: ED_INFO
+  severity: info
+  requires: [cpu_fallback]
+  message: note
+- id: ED_WARN
+  severity: warning
+  requires: [cpu_fallback]
+  message: warn
+- id: ED_ERR
+  severity: error
+  requires: [cpu_fallback]
+  message: err
+""")
+        assert [d.severity for d in diagnose(facts_for())] == [
+            "error", "warning", "info"
+        ]
+
+    def test_unknown_severity_sorts_last(self, rules_dir):
+        # It must not displace a real error from the top of the report.
+        self._rules(rules_dir, """
+- id: ED_ODD
+  severity: bizarre
+  requires: [cpu_fallback]
+  message: odd
+- id: ED_ERR
+  severity: error
+  requires: [cpu_fallback]
+  message: err
+""")
+        assert [d.severity for d in diagnose(facts_for())][0] == "error"
+
+    def test_ordering_is_stable_within_a_severity(self, rules_dir):
+        # Equal severities keep their declaration order, so a rule author can
+        # control which of two errors reads first.
+        self._rules(rules_dir, """
+- id: ED_FIRST
+  severity: error
+  requires: [cpu_fallback]
+  message: first
+- id: ED_SECOND
+  severity: error
+  requires: [cpu_fallback]
+  message: second
+""")
+        assert [d.code for d in diagnose(facts_for())] == ["ED_FIRST", "ED_SECOND"]
+
+
+class TestEvidenceDeduplication:
+    """A fact must never be cited twice by one diagnosis.
+
+    Showing the user the same log line twice reads as a bug in the tool. Two
+    routes produce it, and neither is exercised by any real rule file today —
+    found by mutation testing:
+
+      - a repeated entry in `optional` (a plausible hand-edit slip)
+      - a kind listed in both `requires` and `optional`
+    """
+
+    def test_repeated_optional_entry_cites_once(self, rules_dir):
+        (rules_dir / "probe.yaml").write_text(
+            "- id: ED1\n  requires: [a]\n  optional: [b, b, b]\n  message: m\n"
+        )
+        facts = Facts(
+            backend="probe", artifact_path="t.log",
+            facts=[
+                Fact(id="f1", kind="a", summary="s", source="t.log:1"),
+                Fact(id="f2", kind="b", summary="s", source="t.log:2"),
+            ],
+        )
+        evidence = diagnose(facts)[0].evidence
+        assert evidence == ["f1", "f2"], f"duplicated evidence: {evidence}"
+
+    def test_kind_in_both_requires_and_optional_cites_once(self, rules_dir):
+        (rules_dir / "probe.yaml").write_text(
+            "- id: ED1\n  requires: [a]\n  optional: [a, b]\n  message: m\n"
+        )
+        facts = Facts(
+            backend="probe", artifact_path="t.log",
+            facts=[
+                Fact(id="f1", kind="a", summary="s", source="t.log:1"),
+                Fact(id="f2", kind="b", summary="s", source="t.log:2"),
+            ],
+        )
+        evidence = diagnose(facts)[0].evidence
+        assert len(evidence) == len(set(evidence))
+        assert evidence == ["f1", "f2"]
+
+    def test_many_facts_of_one_optional_kind_are_all_cited_once_each(self, rules_dir):
+        # Dedup must not collapse DISTINCT facts that share a kind.
+        (rules_dir / "probe.yaml").write_text(
+            "- id: ED1\n  requires: [a]\n  optional: [b, b]\n  message: m\n"
+        )
+        facts = Facts(
+            backend="probe", artifact_path="t.log",
+            facts=[Fact(id="f1", kind="a", summary="s", source="t.log:1")]
+            + [Fact(id=f"g{i}", kind="b", summary="s", source=f"t.log:{i}")
+               for i in range(5)],
+        )
+        evidence = diagnose(facts)[0].evidence
+        assert len(evidence) == 6, "each distinct fact must still be cited"
+        assert len(evidence) == len(set(evidence))
+
+    def test_optional_order_is_preserved_after_dedup(self, rules_dir):
+        # The report caps evidence blocks, so the author's ordering decides what
+        # a reader actually sees. Dedup must not reshuffle it.
+        (rules_dir / "probe.yaml").write_text(
+            "- id: ED1\n  requires: [a]\n  optional: [c, c, b]\n  message: m\n"
+        )
+        facts = Facts(
+            backend="probe", artifact_path="t.log",
+            facts=[
+                Fact(id="f1", kind="a", summary="s", source="t.log:1"),
+                Fact(id="f2", kind="b", summary="s", source="t.log:2"),
+                Fact(id="f3", kind="c", summary="s", source="t.log:3"),
+            ],
+        )
+        # required first, then optional in declared order: c before b.
+        assert diagnose(facts)[0].evidence == ["f1", "f3", "f2"]

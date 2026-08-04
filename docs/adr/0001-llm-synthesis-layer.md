@@ -93,3 +93,20 @@ than instructional, prevention of a model setting its own trust label.
 Any failure — missing SDK, missing key, timeout, malformed response, ungrounded
 output — yields zero synthesized diagnoses and leaves the rules-based result
 untouched. The LLM layer can only ever add; never remove or break.
+
+## 7. Synthesized findings cap the exit code at 3 (added 2026-08-04)
+
+Auditing found that a synthesized diagnosis escalated a CLEAN run from exit 0 to
+exit 2, so a generated guess could fail a CI gate. That contradicted the
+"strictly additive" claim above: the exit code is an API, and turning a passing
+build red is a degradation however you frame it.
+
+| | Pros | Cons |
+|---|---|---|
+| **Cap at 3** (chosen) | Visible to automation, but cannot break a build on unreviewed medium-confidence output; keeps exit 2 meaning "a curated rule found a real error" | A genuine LLM-only error is reported less urgently than it might deserve |
+| Keep exit 2 | Treats all findings alike | Lets a guess fail a build, and makes the exit code's meaning depend on whether `--llm` was passed |
+| Never change the code | Safest for CI | An LLM-only finding becomes invisible to automation entirely |
+
+Rule-based errors still exit 2 even when synthesis also fired, so `--llm` can
+only ever move a run from 0 to 3 — never mask a real failure, never manufacture
+one.

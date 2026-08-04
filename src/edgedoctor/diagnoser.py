@@ -155,6 +155,12 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
         #
         # Deduplicated because a kind may legitimately appear in both lists, and
         # showing the user the same log line twice looks like a bug in the tool.
+        # Deduped here AND at evidence_ids below. The redundancy is deliberate:
+        # this one keeps the KIND list clean (so `optional: [b, b]` doesn't scan
+        # facts twice), the other guarantees no id is cited twice whatever the
+        # rule says. Either alone suffices for current rules — mutation testing
+        # confirms removing both is caught, removing one is not — but they guard
+        # different mistakes and both are one cheap call.
         optional = list(dict.fromkeys(_str_list(rule.get("optional"))))
         evidence_facts = [f for f in facts.facts if f.kind in required]
         for kind in optional:
