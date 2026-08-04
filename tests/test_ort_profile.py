@@ -46,6 +46,11 @@ def codes(diagnoses) -> list[str]:
     return [d.code for d in diagnoses]
 
 
+def codes_of(facts) -> list[str]:
+    """Rule codes produced for an already-parsed Facts object."""
+    return codes(diagnose(facts))
+
+
 class TestParsesRealTrace:
     def test_reports_session_phases(self):
         facts = parse_trace(CPU_TRACE)
@@ -288,3 +293,186 @@ class TestParserProperties:
 @pytest.mark.parametrize("trace", [CPU_TRACE, SPLIT_TRACE])
 def test_snapshot(trace, snapshot):
     assert parse_trace(trace).model_dump() == snapshot
+
+
+class TestSingleIterationTrace:
+    """A REAL one-iteration profile, not a hand-built one.
+
+    ED0502 and its suppression of the cost rules previously had no real-artifact
+    coverage — the threshold was only ever checked against a synthetic Facts
+    object, so it was tested against an assumption about what ORT emits.
+    """
+
+    TRACE = "ort_profile_one_iteration.json"
+
+    def test_reports_a_single_iteration(self):
+        facts = parse_trace(self.TRACE)
+        assert fact_of(facts, "profile_summary").data["iterations"] == 1
+
+    def test_flags_the_thin_sample(self):
+        assert "few_iterations" in kinds_in(parse_trace(self.TRACE))
+
+    def test_warns_and_declines_to_attribute_cost(self):
+        codes = codes_of(parse_trace(self.TRACE))
+        assert "ED0502" in codes, "must warn about warm-up-dominated timings"
+        # The whole point: no cost attribution from a one-run sample, even
+        # though a dominant op is clearly present in the data.
+        assert "ED0501" not in codes
+        assert "ED0503" not in codes
+        assert "ED0504" not in codes
+
+    def test_the_dominant_op_is_still_measured_just_not_diagnosed(self):
+        # The parser records what it saw; only the RULES decline to conclude.
+        facts = parse_trace(self.TRACE)
+        assert any(f.kind == "op_cost" for f in facts.facts)
+
+
+class TestBroadFallbackProfile:
+    """The measured counterpart to ort_many_fallback.log.
+
+    Gives ED0503 (>=10% of node time on CPU) its first real-log coverage. The
+    two-partition trace sits at ~1% CPU and correctly does NOT warn, so without
+    this artifact the threshold was never exercised in the firing direction.
+    """
+
+    TRACE = "ort_many_fallback_profile.json"
+
+    def test_a_material_share_of_time_is_on_cpu(self):
+        facts = parse_trace(self.TRACE)
+        split = fact_of(facts, "provider_time_split")
+        assert split.data["cpu_share_pct"] >= 10, (
+            f"expected a material CPU share, got {split.data['cpu_share_pct']}%"
+        )
+
+    def test_warns_about_the_measured_cost_of_the_split(self):
+        assert "ED0503" in codes_of(parse_trace(self.TRACE))
+
+    def test_both_providers_appear_in_the_trace(self):
+        facts = parse_trace(self.TRACE)
+        assert fact_of(facts, "provider_time_split").data["provider_count"] >= 2
+
+    def test_contrasts_with_the_low_cpu_share_trace(self):
+        # The pair is the point: same KIND of split, opposite verdicts, decided
+        # by measured cost rather than by structure.
+        heavy = fact_of(parse_trace(self.TRACE), "provider_time_split")
+        light = fact_of(parse_trace(SPLIT_TRACE), "provider_time_split")
+        assert heavy.data["cpu_share_pct"] > light.data["cpu_share_pct"]
+        assert "ED0503" in codes_of(parse_trace(self.TRACE))
+        assert "ED0503" not in codes_of(parse_trace(SPLIT_TRACE))
+
+
+class TestReadableOpIsConservative:
+    """Only genuine EP-subgraph hashes may be relabelled.
+
+    An earlier heuristic ("contains a long digit run") rewrote the ordinary op
+    name `a_1234567890_b` into "a compiled subgraph #?", inventing a fused
+    subgraph the model doesn't contain. Renaming a real operator is worse than
+    showing a hash: the user goes hunting for a node that isn't there.
+    """
+
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("1234567890_TensorRT_1234567890_2", "TensorRT compiled subgraph #2"),
+            ("7615378459790495232_CoreML_7615378459790495232_0",
+             "CoreML compiled subgraph #0"),
+            ("CoreMLExecutionProvider_123456789_CoreML_123456789_0_0",
+             "CoreML compiled subgraph #0"),
+        ],
+    )
+    def test_genuine_subgraph_names_are_relabelled(self, raw, expected):
+        assert _readable_op(raw) == expected
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "Conv", "FusedConv", "Relu", "/conv1/Conv",
+            "/model/layers.0/attn/MatMul",     # real ONNX naming, has digits+dots
+            "node_1", "_1", "123",
+            "a_1234567890_b",                  # the regression: NOT a subgraph
+            "x_9999999_y_8888888_z",           # two hashes but wrong shape
+            "",
+        ],
+    )
+    def test_real_names_are_never_rewritten(self, raw):
+        assert _readable_op(raw) == raw
+
+
+class TestNonMeasurementsAreRejected:
+    """A duration must be a real, non-negative measurement.
+
+    A negative duration would pollute the total that every percentage share is
+    computed against, quietly making all of them wrong.
+    """
+
+    def _trace(self, dur, cat="Node"):
+        name = "/a_kernel_time" if cat == "Node" else "session_initialization"
+        event = {"cat": cat, "name": name, "dur": dur}
+        if cat == "Node":
+            event["args"] = {"op_name": "Conv", "provider": "CPUExecutionProvider"}
+        return json.dumps([event] * 5)
+
+    @pytest.mark.parametrize("dur", [-1, -1000, -0.5])
+    def test_negative_node_durations_are_skipped(self, dur):
+        facts = parser.parse_text(self._trace(dur), artifact_name="t.json")
+        assert facts.facts == []
+
+    @pytest.mark.parametrize("dur", [-1, -100])
+    def test_negative_session_durations_are_skipped(self, dur):
+        facts = parser.parse_text(self._trace(dur, cat="Session"),
+                                  artifact_name="t.json")
+        assert facts.facts == []
+
+    def test_boolean_durations_are_skipped(self):
+        # bool is a subclass of int in Python, so `True` would otherwise be
+        # accepted as a 1-microsecond measurement.
+        facts = parser.parse_text(self._trace(True), artifact_name="t.json")
+        assert facts.facts == []
+
+    def test_zero_duration_produces_no_bogus_shares(self):
+        # A total of zero would make every share a division by zero.
+        facts = parser.parse_text(self._trace(0), artifact_name="t.json")
+        assert "op_cost" not in kinds_in(facts)
+
+    def test_positive_durations_still_work(self):
+        facts = parser.parse_text(self._trace(10), artifact_name="t.json")
+        assert "op_cost" in kinds_in(facts)
+
+
+class TestMalformedTraceStructures:
+    """Realistic corruption: a truncated write, a partial upload, an SDK change."""
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            "[]",
+            "{}",
+            '{"traceEvents": []}',
+            '{"foo": 1}',
+            "null",
+            "[null, null]",
+            '["a string", 42]',
+            '[{"cat": "Node"}]',                       # no dur, no name
+            '[{"cat": "Node", "dur": "abc", "name": "x_kernel_time"}]',
+            '[{"cat": "Unknown", "dur": 5, "name": "x"}]',
+            '[{"name": "x_kernel_time", "dur": 5}]',   # no cat
+        ],
+    )
+    def test_never_raises(self, payload):
+        # The contract is total: any JSON shape returns a valid Facts object.
+        facts = parser.parse_text(payload, artifact_name="t.json")
+        assert facts.backend == "ort_profile"
+        assert isinstance(facts.facts, list)
+
+    def test_truncated_json_yields_no_facts(self):
+        # A trace written by a process that was killed mid-write.
+        assert parser.parse_text('[{"cat": "Node", "dur": 1', artifact_name="t.json").facts == []
+
+    def test_nodes_without_args_are_still_counted(self):
+        # args carries op_name/provider; without it the timing is still real, so
+        # it must contribute to the total rather than being silently dropped.
+        trace = json.dumps([
+            {"cat": "Node", "name": "/a_kernel_time", "dur": 10} for _ in range(5)
+        ])
+        facts = parser.parse_text(trace, artifact_name="t.json")
+        assert fact_of(facts, "profile_summary").data["total_node_us"] == 50

@@ -153,3 +153,22 @@ class Backend(ABC):
         Must be pure and deterministic (no LLM, no network): same artifact in →
         same Facts out. This is the firewall that keeps the LLM grounded.
         """
+
+    @abstractmethod
+    def parse_text(self, text: str, artifact_name: str = "<string>") -> Facts:
+        """Parse artifact CONTENT, separated from file I/O.
+
+        Required by the ABC, not merely conventional, for two reasons:
+
+        1. It is the seam the robustness suite drives. Every parser is tested
+           against adversarial input (huge lines, binary, malformed encodings)
+           via this method, so a backend without it would silently skip those
+           guarantees — or fail with an AttributeError that reads like a test
+           bug rather than a contract violation.
+        2. Future non-file sources (an MCP request body, a pasted log, a stream)
+           need a text entry point that never touches the filesystem.
+
+        `parse()` should be a thin wrapper: read the file, delegate here. Keeping
+        the split explicit is what makes the parsers testable without fixtures on
+        disk.
+        """

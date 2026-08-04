@@ -204,6 +204,9 @@ def render_human(
     errors = sum(1 for d in diagnoses if d.severity == "error")
     warnings = sum(1 for d in diagnoses if d.severity == "warning")
     infos = sum(1 for d in diagnoses if d.severity == "info")
+    # Anything with a severity we don't recognize still has to be counted, or
+    # the summary contradicts the report it's summarizing.
+    other = len(diagnoses) - errors - warnings - infos
     parts = []
     if errors:
         parts.append(f"[red]{errors} error{'s' if errors != 1 else ''}[/red]")
@@ -211,10 +214,20 @@ def render_human(
         parts.append(f"[yellow]{warnings} warning{'s' if warnings != 1 else ''}[/yellow]")
     if infos:
         parts.append(f"[blue]{infos} note{'s' if infos != 1 else ''}[/blue]")
+    if other:
+        # An unknown severity is itself worth flagging: it means a rule declared
+        # something outside the documented set, and the CLI's exit code (which
+        # keys off error/warning) will not reflect it.
+        parts.append(f"{other} of unknown severity")
     # An info-only run used to render "summary:  · parsed N fact(s)" — counting
     # only errors/warnings left the clause empty. A clean result deserves to be
     # stated, not implied by absence.
-    if not parts:
+    #
+    # Guarded on `diagnoses` being empty, NOT on `parts`: a diagnosis with an
+    # unrecognized severity previously produced "no issues found" while a
+    # diagnosis was printed directly above it — the summary flatly contradicting
+    # the report.
+    if not diagnoses:
         parts.append("no issues found")
     con.print(f"[bold]summary:[/bold] {', '.join(parts)} · "
               f"parsed {len(facts.facts)} fact(s) from {facts.artifact_path}")
@@ -254,15 +267,45 @@ def render_json(diagnoses: list[Diagnosis], facts: Facts) -> str:
     # allow_nan=False makes json.dumps raise ValueError on inf/nan instead of
     # emitting an invalid token. We catch that and retry with the floats
     # sanitized, so the common (finite) case pays no cost.
+    #
+    # RecursionError is caught too: `indent=2` forces json's pure-PYTHON encoder
+    # (the C fast path only handles the compact form), so pathologically nested
+    # data blows the stack during encoding. Real parsers nest Fact.data at most
+    # two deep, but a library caller can hand us anything, and a diagnostic tool
+    # must not die while trying to report. The fallback drops indentation to take
+    # the C encoder, which handles far deeper nesting; if even that fails we emit
+    # a valid, honest error document rather than nothing.
     try:
         return json.dumps(report, indent=2, allow_nan=False, default=_fallback)
     except ValueError:
         return json.dumps(
             _finite_only(report), indent=2, allow_nan=False, default=_fallback
         )
+    except RecursionError:
+        try:
+            return json.dumps(report, allow_nan=False, default=_fallback)
+        except (ValueError, RecursionError):
+            return json.dumps({
+                "schemaVersion": 1,
+                "tool": {"name": "edgedoctor", "version": __version__},
+                "backend": facts.backend,
+                "artifact": facts.artifact_path,
+                "error": "report data was too deeply nested to serialize",
+                "diagnosticCount": len(diagnoses),
+                "factCount": len(facts.facts),
+            }, indent=2)
 
 
-def _finite_only(obj: Any) -> Any:
+#: Depth past which _finite_only stops descending. Real parsers emit Fact.data
+#: nested at most 2 deep, so this is a runaway guard, not a limit anyone should
+#: hit. It exists because this helper recurses in Python while json.dumps
+#: recurses in C: json can handle nesting that would blow our stack, so without
+#: a bound a hand-constructed pathological Facts object could turn a valid
+#: report into a RecursionError.
+_MAX_SANITIZE_DEPTH = 200
+
+
+def _finite_only(obj: Any, _depth: int = 0) -> Any:
     """Recursively replace non-finite floats with their string form.
 
     NaN/Infinity aren't valid JSON, but they ARE real values a parser might
@@ -272,10 +315,14 @@ def _finite_only(obj: Any) -> Any:
     """
     import math
 
+    if _depth > _MAX_SANITIZE_DEPTH:
+        # Too deep to descend safely. Stringify wholesale rather than risk a
+        # stack overflow — the alternative is no report at all.
+        return str(obj)
     if isinstance(obj, float) and not math.isfinite(obj):
         return str(obj)  # "inf", "-inf", "nan"
     if isinstance(obj, dict):
-        return {k: _finite_only(v) for k, v in obj.items()}
+        return {k: _finite_only(v, _depth + 1) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_finite_only(v) for v in obj]
+        return [_finite_only(v, _depth + 1) for v in obj]
     return obj

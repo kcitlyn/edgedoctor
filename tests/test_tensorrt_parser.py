@@ -159,3 +159,60 @@ def test_snapshot(fixture, snapshot):
     """
     facts = parse_fixture(fixture)
     assert facts.model_dump() == snapshot
+
+
+class TestNamespacedOpNames:
+    """Op names containing dots must be captured whole.
+
+    ONNX custom domains produce namespaced op types — "com.microsoft.Attention",
+    "ns.Foo" — and TensorRT reports them verbatim. The signature originally
+    excluded dots (to stop the op name swallowing the sentence-ending period),
+    which meant such a line matched NOTHING: a real unsupported op went
+    completely undiagnosed rather than being reported with a truncated name.
+    """
+
+    TEMPLATE = "No importer registered for op: {}. Attempting to import as plugin."
+
+    def _op(self, text: str):
+        facts = parser.parse_text(text, artifact_name="t.log")
+        return [f.data.get("op") for f in facts.facts if f.kind == "unsupported_op"]
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            "GridSample",                 # the plain case
+            "ns.Foo",                     # a single namespace
+            "com.microsoft.Attention",    # a real ORT contrib-op domain
+            "ai.onnx.preview.Foo",        # deeper nesting
+            "grid_sampler",               # underscore form from older TRT
+            "/path/Foo",                  # slash, seen in some graphs
+            "Conv日本",                    # non-ASCII must survive
+        ],
+    )
+    def test_op_name_is_captured_whole(self, op):
+        assert self._op(self.TEMPLATE.format(op)) == [op]
+
+    def test_bracketed_form_still_works(self):
+        # TRT brackets the name in some versions; the brackets are stripped.
+        assert self._op(
+            "No importer registered for op: [LayerNorm]. "
+            "Attempting to import as plugin."
+        ) == ["LayerNorm"]
+
+    def test_trailing_period_is_not_part_of_the_op(self):
+        # The whole reason dots were excluded originally.
+        assert self._op(self.TEMPLATE.format("GridSample")) == ["GridSample"]
+
+    def test_missing_trailing_text_does_not_match(self):
+        # A truncated line is not proof that an op was unsupported, so it must
+        # NOT produce a fact — an incomplete message is not evidence.
+        assert self._op("No importer registered for op: GridSample") == []
+
+    def test_a_pathological_line_stays_fast(self):
+        import time
+
+        start = time.monotonic()
+        parser.parse_text(
+            "No importer registered for op: " + "A" * 200_000, artifact_name="t.log"
+        )
+        assert time.monotonic() - start < 2.0

@@ -62,6 +62,9 @@ model, providers = sys.argv[1], sys.argv[2].split(",")
 # Optional 3rd arg: a path to write a profiling trace to. When given, the
 # session is also RUN (profiling only records executed kernels).
 profile_to = sys.argv[3] if len(sys.argv) > 3 else ""
+# Optional 4th arg: how many inference runs to profile. 1 deliberately
+# produces a warm-up-dominated trace, which is its own test case.
+iterations = int(sys.argv[4]) if len(sys.argv) > 4 else 5
 
 so = ort.SessionOptions()
 so.log_severity_level = 0    # VERBOSE — required for placement logging
@@ -78,8 +81,9 @@ try:
         for inp in sess.get_inputs():
             shape = [d if isinstance(d, int) else 1 for d in inp.shape]
             feeds[inp.name] = np.random.rand(*shape).astype("float32")
-        # Several iterations: one run's timings are dominated by warm-up.
-        for _ in range(5):
+        # Several iterations by default: one run's timings are dominated by
+        # warm-up. Pass iterations=1 to capture that pathology on purpose.
+        for _ in range(iterations):
             sess.run(None, feeds)
         shutil.move(sess.end_profiling(), profile_to)
         print("PROFILE_WRITTEN: " + profile_to)
@@ -90,7 +94,7 @@ except Exception as exc:
 
 
 def _run_session(model: Path, providers: list[str], log_path: Path,
-                 profile_to: Path | None = None) -> int:
+                 profile_to: Path | None = None, iterations: int = 5) -> int:
     """Create an ORT session in a subprocess, capturing its verbose log.
 
     Combined stdout+stderr capture, as with the Polygraphy corpus: the line
@@ -100,6 +104,7 @@ def _run_session(model: Path, providers: list[str], log_path: Path,
     cmd = [sys.executable, "-c", _DRIVER, str(model), ",".join(providers)]
     if profile_to is not None:
         cmd.append(str(profile_to))
+        cmd.append(str(iterations))
     print(f"  $ python -c <driver> {model.name} {','.join(providers)}")
     with log_path.open("w") as fh:
         proc = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, text=True)
@@ -142,6 +147,50 @@ def _make_partial_model(dst: Path) -> None:
     ]
     graph = helper.make_graph(nodes, "partial_fallback", [inp], [out],
                              initializer=[weight])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
+    model.ir_version = 9
+    onnx.checker.check_model(model)
+    onnx.save(model, str(dst))
+
+
+def _make_many_fallback_model(dst: Path) -> None:
+    """Build a graph where MANY DISTINCT ops fall back, interleaved mid-graph.
+
+    Different from _make_partial_model on purpose. That one has two unsupported
+    ops and produces two partitions — enough to show a split exists. This one
+    alternates supported Conv with five DIFFERENT unsupported ops, so the
+    accelerator can claim only half the graph and must hand five separate op
+    types back to CPU across five partitions.
+
+    That distinction is what exercises the "broad fallback" rule (ED0303, which
+    needs >=3 distinct fallback ops before it fires). Without this artifact that
+    rule was only ever tested against hand-built Facts, meaning its threshold
+    was never checked against a real log.
+    """
+    import numpy as np
+    import onnx
+    from onnx import TensorProto, helper
+
+    inp = helper.make_tensor_value_info("input", TensorProto.FLOAT, [1, 3, 256, 256])
+    out = helper.make_tensor_value_info("output", TensorProto.FLOAT, [1, 3, 256, 256])
+    rng = np.random.default_rng(0)  # seeded: the corpus must be reproducible
+    weight = helper.make_tensor(
+        "w", TensorProto.FLOAT, [3, 3, 3, 3],
+        rng.standard_normal(81).astype("float32").ravel(),
+    )
+    nodes = []
+    current = "input"
+    # Each of these is unsupported by the CoreML EP, and each sits BETWEEN two
+    # supported convolutions, so none can be lopped off as a tail.
+    for i, op in enumerate(("Erf", "Round", "Sign", "Ceil", "Floor")):
+        nodes.append(helper.make_node("Conv", [current, "w"], [f"c{i}"],
+                                      name=f"Conv_{i}", pads=[1, 1, 1, 1]))
+        nodes.append(helper.make_node(op, [f"c{i}"], [f"u{i}"], name=f"{op}_{i}"))
+        current = f"u{i}"
+    nodes.append(helper.make_node("Identity", [current], ["output"], name="Out"))
+
+    graph = helper.make_graph(nodes, "many_fallback", [inp], [out],
+                              initializer=[weight])
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
     model.ir_version = 9
     onnx.checker.check_model(model)
@@ -207,7 +256,7 @@ def main() -> None:
     # A parser that reports fallback here is hallucinating. This is the
     # ORT-side equivalent of the divergence corpus's clean baseline.
     if accel:
-        print(f"\n[1/6] All nodes on one EP ({accel})")
+        print(f"\n[1/9] All nodes on one EP ({accel})")
         log = args.out / "ort_all_nodes_one_ep.log"
         _run_session(resnet, [accel, "CPUExecutionProvider"], log)
         _sidecar(
@@ -222,11 +271,11 @@ def main() -> None:
             "n/a — this is the desired state.",
         )
     else:
-        print("\n[1/6] SKIPPED — no accelerator EP available on this host")
+        print("\n[1/9] SKIPPED — no accelerator EP available on this host")
 
     # ── 2. Partial fallback: the actual bug ──────────────────────────────
     if accel:
-        print(f"\n[2/6] Partial fallback ({accel} + CPU)")
+        print(f"\n[2/9] Partial fallback ({accel} + CPU)")
         partial = args.work / "partial_fallback.onnx"
         _make_partial_model(partial)
         log = args.out / "ort_partial_fallback.log"
@@ -250,7 +299,7 @@ def main() -> None:
     # ── 3. CPU-only: nothing to fall back FROM ───────────────────────────
     # Distinct from case 1: all-on-CPU is only a problem if you expected
     # acceleration. A rule must not treat a deliberate CPU session as a failure.
-    print("\n[3/6] CPU-only session")
+    print("\n[3/9] CPU-only session")
     log = args.out / "ort_cpu_only.log"
     _run_session(resnet, ["CPUExecutionProvider"], log)
     _sidecar(
@@ -269,7 +318,7 @@ def main() -> None:
     # ── 4. Requested EP not in this build ────────────────────────────────
     # Silent and expensive: you believe you are measuring accelerated
     # execution and you are measuring CPU.
-    print("\n[4/6] Missing/unavailable provider")
+    print("\n[4/9] Missing/unavailable provider")
     log = args.out / "ort_missing_provider.log"
     _run_session(resnet, ["TensorrtExecutionProvider", "CPUExecutionProvider"], log)
     _sidecar(
@@ -291,7 +340,7 @@ def main() -> None:
     # says whether that split actually cost anything, which is the question a
     # user actually has. Profiling requires RUNNING the model, so these steps
     # execute inference rather than just constructing a session.
-    print("\n[5/6] Profiling trace (CPU-only)")
+    print("\n[5/9] Profiling trace (CPU-only)")
     _run_session(resnet, ["CPUExecutionProvider"],
                  args.out / "ort_profile_cpu_session.log",
                  profile_to=args.out / "ort_profile_cpu.json")
@@ -318,7 +367,7 @@ def main() -> None:
     )
 
     if accel:
-        print(f"\n[6/6] Profiling trace (split across {accel} + CPU)")
+        print(f"\n[6/9] Profiling trace (split across {accel} + CPU)")
         partial = args.work / "partial_fallback.onnx"
         if not partial.exists():
             _make_partial_model(partial)
@@ -348,7 +397,101 @@ def main() -> None:
             "measured cost knowingly.",
         )
     else:
-        print("\n[6/6] SKIPPED — no accelerator EP for a split profile")
+        print("\n[6/9] SKIPPED — no accelerator EP for a split profile")
+
+    # ── 7. Session construction FAILS ────────────────────────────────────
+    # A corrupt model file. Distinct from every case above: no placement
+    # happens at all, so no performance or provider conclusion can be drawn —
+    # which is exactly what ED0304 says and why it must suppress ED0305.
+    print("\n[7/9] Session construction failure (corrupt model)")
+    corrupt = args.work / "corrupt.onnx"
+    corrupt.write_bytes(b"this is not a valid onnx protobuf " * 20)
+    log = args.out / "ort_session_failed.log"
+    _run_session(corrupt, ["CPUExecutionProvider"], log)
+    _sidecar(
+        log,
+        "InferenceSession(corrupt.onnx, providers=[CPUExecutionProvider]) with "
+        "log_severity_level=0",
+        "failed",
+        "The model file is not a valid ONNX protobuf, so the session could not "
+        "be created. Nothing was placed on any execution provider, which means "
+        "no fallback or performance conclusion can be drawn from this log in "
+        "either direction. Included because it is the one ORT case where the "
+        "session genuinely does NOT succeed.",
+        "Validate the model with onnx.checker before loading it.",
+    )
+
+    # ── 8. A one-iteration profile ───────────────────────────────────────
+    # Timings here are dominated by warm-up, so ED0502 must fire and must
+    # SUPPRESS the cost-attribution rules. Generated as a real trace rather
+    # than hand-built, because the whole point is what ORT actually emits for
+    # a single run.
+    print("\n[8/9] Single-iteration profiling trace (warm-up dominated)")
+    log = args.out / "ort_profile_one_iteration_session.log"
+    _run_session(resnet, ["CPUExecutionProvider"], log,
+                 profile_to=args.out / "ort_profile_one_iteration.json",
+                 iterations=1)
+    for target, note in (
+        ("ort_profile_one_iteration_session.log",
+         "Session log accompanying the single-iteration trace."),
+        ("ort_profile_one_iteration.json",
+         "A profile of exactly ONE inference. Every timing includes one-time "
+         "costs — arena allocation, thread-pool spin-up, cold caches — so "
+         "per-op shares computed from it are misleading. This is the artifact "
+         "that proves edgedoctor declines to attribute cost from a warm-up "
+         "sample."),
+    ):
+        _sidecar(
+            args.out / target,
+            "InferenceSession(resnet18.onnx, providers=[CPUExecutionProvider]) "
+            "with enable_profiling=True, then exactly 1 inference run",
+            "succeeded",
+            note,
+            "Re-profile with several warm-up runs before the measured ones.",
+        )
+
+    # ── 9. BROAD fallback: many distinct ops, many partitions ────────────
+    # Exercises the "the provider covers little of this graph" rule, whose
+    # >=3-distinct-ops threshold otherwise had no real-log coverage.
+    if accel:
+        print(f"\n[9/9] Broad fallback ({accel}: many distinct unsupported ops)")
+        many = args.work / "many_fallback.onnx"
+        _make_many_fallback_model(many)
+        log = args.out / "ort_many_fallback.log"
+        # Profiled as well as logged: this is the artifact where a real share of
+        # node time lands on CPU, which is what the measured-cost rule (ED0503)
+        # needs. The placement log alone can't establish cost.
+        _run_session(many, [accel, "CPUExecutionProvider"], log,
+                     profile_to=args.out / "ort_many_fallback_profile.json")
+        _sidecar(
+            log,
+            f"InferenceSession(many_fallback.onnx, providers=[{accel}, "
+            "CPUExecutionProvider]) with log_severity_level=0",
+            "succeeded-with-warnings",
+            "Five DIFFERENT ops (Erf, Round, Sign, Ceil, Floor) are unsupported "
+            f"by the {accel} EP, and each sits between two supported "
+            "convolutions. The accelerator claims only half the graph and the "
+            "rest is cut into five separate partitions — the signature of a "
+            "systematic coverage gap rather than one exotic layer, which is a "
+            "different diagnosis with different advice.",
+            "Check the provider's supported-operator list; consider a different "
+            "opset or provider rather than removing five ops individually.",
+        )
+        _sidecar(
+            args.out / "ort_many_fallback_profile.json",
+            f"InferenceSession(many_fallback.onnx, providers=[{accel}, "
+            "CPUExecutionProvider]) with enable_profiling=True, then 5 runs",
+            "succeeded-with-warnings",
+            "The measured counterpart to ort_many_fallback.log. Half the graph "
+            "runs on CPU, so a material share of kernel time lands there — "
+            "which is what turns a placement warning into a quantified cost. "
+            "Note the trace attributes kernel time only; the synchronization at "
+            "each of the five partition boundaries is largely invisible here, so "
+            "the real cost of the split is at least this much.",
+            "Remove or replace the unsupported ops to rejoin the partitions.",
+        )
+    else:
+        print("\n[9/9] SKIPPED — no accelerator EP for a broad-fallback case")
 
     print(f"\nDone. Artifacts in {args.out}/")
     print("Inspect with: uv run edgedoctor parse <log> -b onnxruntime")

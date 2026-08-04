@@ -36,8 +36,16 @@ _SIGNATURES: list[_Sig] = [
     # Source: onnx-tensorrt ModelImporter.cpp; NVIDIA/TensorRT issues #3346, #2625.
     (
         "unsupported_op",
+        # The op group is LAZY and bounded, anchored on the known trailing text.
+        # It previously excluded dots, to stop the op name swallowing the
+        # sentence-ending period — but that also silently dropped NAMESPACED
+        # ops, which ONNX custom domains genuinely produce: a log reporting
+        # "com.microsoft.Attention" or "ns.Foo" matched nothing at all, so a real
+        # unsupported op went undiagnosed. Anchoring on "Attempting to import as
+        # plugin" lets the anchor consume the period instead, keeping dots inside
+        # the name. Bounded to keep matching linear on a pathological line.
         re.compile(
-            r"No importer registered for op:\s*\[?(?P<op>[^\].\s]+)\]?\.?"
+            r"No importer registered for op:\s*\[?(?P<op>[^\s\]]{1,256}?)\]?\.?"
             r"\s*Attempting to import as plugin"
         ),
         lambda m: f"ONNX parser has no importer for op '{m['op']}'; trying plugin fallback",
