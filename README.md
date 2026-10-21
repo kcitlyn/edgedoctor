@@ -155,8 +155,8 @@ $ EDGEDOCTOR_LIVE_TESTS=1 uv run pytest tests/test_llm_live.py -v
 | (B) Accuracy divergence (FP32 vs INT8)  | Polygraphy        | ✅ working   |
 | (B) NaN / Inf in outputs                | Polygraphy        | ✅ working   |
 | (B) Layer-wise first-diverging tensor   | Polygraphy        | ✅ working   |
-| Memory / arena overflow                 | Raspberry Pi      | ✅ working   |
-| Thermal throttling / undervoltage       | Raspberry Pi      | ✅ working   |
+| Memory / arena overflow                 | Raspberry Pi      | 🧪 sample logs only³ |
+| Thermal throttling / undervoltage       | Raspberry Pi      | 🧪 sample logs only³ |
 | Per-op cost attribution                 | ONNX Runtime      | ✅ working   |
 | Performance regression (fused engines)  | —                 | ⛔ out of scope (near-term)¹ |
 
@@ -168,6 +168,10 @@ return later as a research-grade frontier.
 execution providers). A pure TensorRT engine has no per-op CPU fallback — an
 unsupported op fails the build outright, which is failure class (A) above.
 
+³ The Raspberry Pi parser and rules pass their tests against sample logs, but
+no Pi is in hand yet, so neither diagnosis has been checked against a real
+device. They move to ✅ once they have.
+
 ---
 
 ## Hardware lanes
@@ -178,7 +182,8 @@ unsupported op fails the build outright, which is failure class (A) above.
   4 GB VRAM ⇒ small edge models (YOLO-nano/small, MobileNet-SSD). CUDA 13.2 is
   very new ⇒ TensorRT version matching is fiddly — which we treat as a
   first-class failure the tool should diagnose (free dogfooding).
-- **Raspberry Pi 5** — later (MCU / on-device divergence), not in hand yet.
+- **Raspberry Pi 5** — not in hand yet. The Pi diagnoses above run on sample
+  logs only until real-device logs exist.
 
 ---
 
