@@ -21,16 +21,63 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from typer.core import TyperGroup
 
 from . import __version__
 from .backends import PARSER_REGISTRY, get_parser
 from .redact import sanitize_for_display, strip_control_chars
+
+#: Exit code for a usage mistake (bad flag, bad --backend value, missing file).
+USAGE_EXIT_CODE = 1
+
+
+def _is_usage_error(exc: BaseException) -> bool:
+    """True for click's UsageError family (BadParameter, NoSuchOption, ...).
+
+    Matched by MRO name because typer vendors click privately: the class lives
+    at `typer._click.exceptions.UsageError`, and only BadParameter (a subclass)
+    is re-exported publicly. Name matching avoids importing a private module.
+    """
+    return any(c.__name__ == "UsageError" for c in type(exc).__mro__)
+
+
+class _UsageErrorsExit1(TyperGroup):
+    """Remap click's usage-error exit code from 2 to 1.
+
+    click exits 2 on ANY usage error — an unknown flag, `-b bogus`, a missing
+    argument. This tool reserves 2 for "errors were found in the log", so a CI
+    job with a typo'd flag looked exactly like a failed model. The contract is
+    1 = usage/tool error. Only the unreadable-file case had been handled (via
+    readable=False); this covers the rest of click's parsing in one place.
+
+    Both hooks are needed: the group's own options are parsed in make_context,
+    while a subcommand's options (including --backend) are parsed when the
+    group invokes it.
+    """
+
+    def make_context(self, *args, **kwargs):  # type: ignore[override]
+        try:
+            return super().make_context(*args, **kwargs)
+        except Exception as e:
+            if _is_usage_error(e):
+                e.exit_code = USAGE_EXIT_CODE  # type: ignore[attr-defined]
+            raise
+
+    def invoke(self, ctx):  # type: ignore[override]
+        try:
+            return super().invoke(ctx)
+        except Exception as e:
+            if _is_usage_error(e):
+                e.exit_code = USAGE_EXIT_CODE  # type: ignore[attr-defined]
+            raise
+
 
 app = typer.Typer(
     name="edgedoctor",
     help="The universal, cross-vendor edge-AI deployment diagnostician.",
     add_completion=True,
     no_args_is_help=True,
+    cls=_UsageErrorsExit1,
 )
 
 # stdout for reports, stderr for chatter — keeps piped output clean.

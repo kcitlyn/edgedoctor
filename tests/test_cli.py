@@ -102,6 +102,21 @@ class TestDiagnose:
         assert len(data["diagnostics"]) >= 1
         assert data["diagnostics"][0]["code"] == "ED0101"
 
+    def test_usage_errors_exit_1_not_2(self):
+        # click exits 2 on usage errors by default, which collided with
+        # "2 = errors found in the log": a CI job with a typo'd flag looked
+        # exactly like a failed model. Every click parse failure must exit 1.
+        for argv in (
+            ["diagnose", self.FIXTURE, "-b", "bogus"],
+            ["diagnose", self.FIXTURE, "--no-such-flag"],
+            ["diagnose", self.FIXTURE, "--json", "-b", "bogus"],
+            ["parse", self.FIXTURE, "-b", "bogus"],
+            ["diagnose"],
+            ["no-such-command"],
+        ):
+            result = runner.invoke(app, argv)
+            assert result.exit_code == 1, (argv, result.exit_code, result.output)
+
     def test_missing_file_exits_1(self):
         result = runner.invoke(app, ["diagnose", "nope.log"])
         assert result.exit_code == 1
