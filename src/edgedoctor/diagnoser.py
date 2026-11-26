@@ -171,8 +171,14 @@ def diagnose(facts: Facts) -> list[Diagnosis]:
 
         # Build a placeholder dict from the matched facts' data fields.
         # First fact of each kind wins for placeholder resolution.
+        #
+        # EXCEPT for facts that satisfied a condition: those resolve first. A
+        # rule gated on "some session_phase took >= 100 ms" must print THAT
+        # phase's duration, not the first phase's — otherwise the message
+        # states a number that contradicts the very gate that fired it
+        # (ED0504 once reported "setup took 0.724 ms" for a 272 ms init).
         placeholders: dict[str, str] = {}
-        for f in evidence_facts:
+        for f in _condition_witnesses(conditions, facts) + evidence_facts:
             for k, v in f.data.items():
                 placeholders.setdefault(k, str(v))
 
@@ -254,6 +260,26 @@ def _conditions_met(conditions: list[dict[str, Any]], facts: Facts) -> bool:
         ):
             return False
     return True
+
+
+def _condition_witnesses(
+    conditions: list[Any], facts: Facts
+) -> list[Any]:
+    """The first fact satisfying each condition, in condition order.
+
+    Only called after _conditions_met passed, so every condition has one.
+    """
+    witnesses = []
+    for cond in conditions:
+        if not isinstance(cond, dict):
+            continue
+        kind, field = cond.get("kind"), cond.get("field")
+        lo, hi = cond.get("min"), cond.get("max")
+        for f in facts.facts:
+            if f.kind == kind and _satisfies(f.data.get(field), lo, hi):
+                witnesses.append(f)
+                break
+    return witnesses
 
 
 def _satisfies(value: Any, lo: Any, hi: Any) -> bool:

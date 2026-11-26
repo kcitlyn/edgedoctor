@@ -347,6 +347,17 @@ class TestBroadFallbackProfile:
     def test_warns_about_the_measured_cost_of_the_split(self):
         assert "ED0503" in codes_of(parse_trace(self.TRACE))
 
+    def test_setup_message_cites_the_phase_that_crossed_the_threshold(self):
+        # Regression: ED0504 fires because session_initialization took >= 100
+        # ms, but its {ms} placeholder used to resolve from the FIRST
+        # session_phase fact (model_loading_uri, under 1 ms), so the report
+        # said "setup took 0.724 ms" — contradicting its own gate.
+        d = next(d for d in diagnose(parse_trace(self.TRACE)) if d.code == "ED0504")
+        phases = [f for f in parse_trace(self.TRACE).facts
+                  if f.kind == "session_phase" and f.data["ms"] >= 100]
+        assert phases, "fixture must contain a phase over the threshold"
+        assert f"took {phases[0].data['ms']} ms" in d.message
+
     def test_both_providers_appear_in_the_trace(self):
         facts = parse_trace(self.TRACE)
         assert fact_of(facts, "provider_time_split").data["provider_count"] >= 2
