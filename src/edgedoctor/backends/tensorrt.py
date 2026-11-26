@@ -75,7 +75,11 @@ _SIGNATURES: list[_Sig] = [
         "parse_error_node",
         re.compile(
             r"In node (?P<idx>-?\d+)"
-            r"(?: with name: (?P<name>\S+) and operator: (?P<op>\S+))?"
+            # Name and operator may be EMPTY: parserErrorStr (errorHelpers.hpp)
+            # concatenates error->nodeName() unconditionally, and unnamed ONNX
+            # nodes are common — giving "with name:  and operator: X". `\S+`
+            # here silently dropped every such error.
+            r"(?: with name: (?P<name>\S{0,512}) and operator: (?P<op>\S{0,256}))?"
             r" \((?P<func>\w+)\): (?P<code>[A-Z_]+):"
         ),
         lambda m: (

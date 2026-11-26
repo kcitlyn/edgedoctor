@@ -216,3 +216,14 @@ class TestNamespacedOpNames:
             "No importer registered for op: " + "A" * 200_000, artifact_name="t.log"
         )
         assert time.monotonic() - start < 2.0
+
+
+def test_trt10_parse_error_on_unnamed_node_is_captured():
+    # onnx-tensorrt errorHelpers.hpp parserErrorStr emits an empty name for
+    # unnamed nodes; this line previously produced zero facts.
+    line = ("[E] [TRT] ModelImporter.cpp:949: ERROR: In node 3 with name:  and "
+            "operator: GridSample (importFallbackPluginImporter): "
+            "UNSUPPORTED_NODE: Assertion failed")
+    facts = TensorRTBackend().parse_text(line).facts
+    assert [f.kind for f in facts] == ["parse_error_node"]
+    assert facts[0].data["code"] == "UNSUPPORTED_NODE"
